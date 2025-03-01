@@ -6,14 +6,14 @@ services:
     volumes:
       - ${DOCKER_DIRECTORY}/appdata/profilarr:/config
     environment:
-      - TZ=${TZ}
+      TZ: ${TZ}
     networks:
-        traefik:
+      traefik:
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:
-        traefik.enable: true
-        traefik.http.routers.profilarr-rtr.rule: Host(`${SUBDOMAIN__PROFILARR}.${DOMAIN_NAME}`)
-        traefik.http.routers.profilarr-rtr.entrypoints: websecure
-        traefik.http.routers.profilarr-rtr.service: profilarr-svc
-        traefik.http.services.profilarr-svc.loadbalancer.server.port: 6868
-        traefik.http.routers.profilarr-rtr.middlewares: chain-oauth-google@file
+      traefik.enable: true
+      traefik.http.routers.profilarr-rtr.rule: Host(`${SUBDOMAIN__PROFILARR}.${DOMAIN_NAME}`)
+      traefik.http.routers.profilarr-rtr.entrypoints: websecure
+      traefik.http.routers.profilarr-rtr.service: profilarr-svc
+      traefik.http.services.profilarr-svc.loadbalancer.server.port: 6868
+      traefik.http.routers.profilarr-rtr.middlewares: chain-oauth-google@file

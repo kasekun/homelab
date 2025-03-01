@@ -5,30 +5,30 @@
 #######################################
 
 services:
-    calibre-web:
-        container_name: calibre-web
-        image: lscr.io/linuxserver/calibre-web:latest
-        profiles: [ "books", "all" ]
-        volumes:
-          - ${DOCKER_DIRECTORY}/appdata/calibre-web:/config
-          - ${MEDIA_DIRECTORY}/data:/data
-          - ${DOCKER_DIRECTORY}/appdata/calibre:/calibre-config
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-            DOCKER_MODS: linuxserver/mods:universal-calibre
-            OAUTHLIB_RELAX_TOKEN_SCOPE: 1
-        security_opt:
-          - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        platform: linux/amd64
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.calibre-web-rtr.rule: Host(`${SUBDOMAIN__CALIBRE_WEB}.${DOMAIN_NAME}`)
-            traefik.http.routers.calibre-web-rtr.entrypoints: websecure
-            traefik.http.routers.calibre-web-rtr.service: calibre-web-svc
-            traefik.http.services.calibre-web-svc.loadbalancer.server.port: 8083
-            traefik.http.routers.calibre-web-rtr.middlewares: chain-oauth-google@file
+  calibre-web:
+    container_name: calibre-web
+    image: lscr.io/linuxserver/calibre-web:latest
+    profiles: [ "books", "all" ]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/calibre-web:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+      - ${DOCKER_DIRECTORY}/appdata/calibre:/calibre-config
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      DOCKER_MODS: linuxserver/mods:universal-calibre
+      OAUTHLIB_RELAX_TOKEN_SCOPE: 1
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    platform: linux/amd64
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.calibre-web-rtr.rule: Host(`${SUBDOMAIN__CALIBRE_WEB}.${DOMAIN_NAME}`)
+      traefik.http.routers.calibre-web-rtr.entrypoints: websecure
+      traefik.http.routers.calibre-web-rtr.service: calibre-web-svc
+      traefik.http.services.calibre-web-svc.loadbalancer.server.port: 8083
+      traefik.http.routers.calibre-web-rtr.middlewares: chain-oauth-google@file

@@ -4,21 +4,21 @@
 #######################################
 
 services:
-    watchtower:
-        container_name: watchtower
-        image: containrrr/watchtower:latest
-        profiles: ["utilities", "all"]
-        networks:
-            internal:
-            docker:
-        security_opt:
-            - no-new-privileges:true
-        restart: always
-        environment:
-            TZ: ${TZ}
-            WATCHTOWER_CLEANUP: "true"
-            WATCHTOWER_REMOVE_VOLUMES: "true"
-            WATCHTOWER_INCLUDE_STOPPED: "true"
-            WATCHTOWER_NO_STARTUP_MESSAGE: "false"
-            WATCHTOWER_SCHEDULE: 0 30 12 * * *
-            DOCKER_HOST: tcp://socket-proxy:2375
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower:latest
+    profiles: ["utilities", "all"]
+    networks:
+      internal:
+      docker:
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+    environment:
+      TZ: ${TZ}
+      WATCHTOWER_CLEANUP: true
+      WATCHTOWER_REMOVE_VOLUMES: true
+      WATCHTOWER_INCLUDE_STOPPED: true
+      WATCHTOWER_NO_STARTUP_MESSAGE: false
+      WATCHTOWER_SCHEDULE: "0 30 12 * * *"
+      DOCKER_HOST: tcp://socket-proxy:2375

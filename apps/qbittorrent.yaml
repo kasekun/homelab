@@ -34,4 +34,4 @@ services:
       timeout: 10s
       retries: 1
     labels: # traefik labels are handled inside gluetun.yaml
-      - "deunhealth.restart.on.unhealthy=true"
+      deunhealth.restart.on.unhealthy: true

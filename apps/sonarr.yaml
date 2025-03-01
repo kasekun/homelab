@@ -3,26 +3,26 @@
 #######################################
 
 services:
-    sonarr:
-        container_name: sonarr
-        image: lscr.io/linuxserver/sonarr:latest
-        profiles: ["media", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/sonarr:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.sonarr-rtr.rule: Host(`${SUBDOMAIN__SONARR}.${DOMAIN_NAME}`)
-            traefik.http.routers.sonarr-rtr.entrypoints: websecure
-            traefik.http.routers.sonarr-rtr.service: sonarr-svc
-            traefik.http.services.sonarr-svc.loadbalancer.server.port: 8989
-            traefik.http.routers.sonarr-rtr.middlewares: chain-oauth-google@file
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    profiles: ["media", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/sonarr:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.sonarr-rtr.rule: Host(`${SUBDOMAIN__SONARR}.${DOMAIN_NAME}`)
+      traefik.http.routers.sonarr-rtr.entrypoints: websecure
+      traefik.http.routers.sonarr-rtr.service: sonarr-svc
+      traefik.http.services.sonarr-svc.loadbalancer.server.port: 8989
+      traefik.http.routers.sonarr-rtr.middlewares: chain-oauth-google@file

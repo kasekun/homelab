@@ -4,26 +4,26 @@
 #######################################
 
 services:
-    tautulli:
-        container_name: tautulli
-        image: lscr.io/linuxserver/tautulli:latest
-        profiles: ["media", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/tautulli:/config
-            - ${DOCKER_DIRECTORY}/appdata/plex/Library/Application Support/Plex Media Server/Logs:/logs:ro
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.tautulli-rtr.rule: Host(`${SUBDOMAIN__TAUTULLI}.${DOMAIN_NAME}`)
-            traefik.http.routers.tautulli-rtr.entrypoints: websecure
-            traefik.http.routers.tautulli-rtr.service: tautulli-svc
-            traefik.http.services.tautulli-svc.loadbalancer.server.port: 8181
-            traefik.http.routers.tautulli-rtr.middlewares: chain-oauth-google@file
+  tautulli:
+    container_name: tautulli
+    image: lscr.io/linuxserver/tautulli:latest
+    profiles: [ "media", "all" ]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/tautulli:/config
+      - ${DOCKER_DIRECTORY}/appdata/plex/Library/Application Support/Plex Media Server/Logs:/logs:ro
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.tautulli-rtr.rule: Host(`${SUBDOMAIN__TAUTULLI}.${DOMAIN_NAME}`)
+      traefik.http.routers.tautulli-rtr.entrypoints: websecure
+      traefik.http.routers.tautulli-rtr.service: tautulli-svc
+      traefik.http.services.tautulli-svc.loadbalancer.server.port: 8181
+      traefik.http.routers.tautulli-rtr.middlewares: chain-oauth-google@file

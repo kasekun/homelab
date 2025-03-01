@@ -3,25 +3,25 @@
 #######################################
 
 services:
-    prowlarr:
-        container_name: prowlarr
-        image: lscr.io/linuxserver/prowlarr:latest
-        profiles: ["media", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/prowlarr:/config
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.prowlarr-rtr.rule: Host(`${SUBDOMAIN__PROWLARR}.${DOMAIN_NAME}`)
-            traefik.http.routers.prowlarr-rtr.entrypoints: websecure
-            traefik.http.routers.prowlarr-rtr.service: prowlarr-svc
-            traefik.http.services.prowlarr-svc.loadbalancer.server.port: 9696
-            traefik.http.routers.prowlarr-rtr.middlewares: chain-oauth-google@file
+  prowlarr:
+    container_name: prowlarr
+    image: lscr.io/linuxserver/prowlarr:latest
+    profiles: ["media", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/prowlarr:/config
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.prowlarr-rtr.rule: Host(`${SUBDOMAIN__PROWLARR}.${DOMAIN_NAME}`)
+      traefik.http.routers.prowlarr-rtr.entrypoints: websecure
+      traefik.http.routers.prowlarr-rtr.service: prowlarr-svc
+      traefik.http.services.prowlarr-svc.loadbalancer.server.port: 9696
+      traefik.http.routers.prowlarr-rtr.middlewares: chain-oauth-google@file

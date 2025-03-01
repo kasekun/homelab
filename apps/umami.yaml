@@ -4,31 +4,31 @@
 ####################################
 
 services:
-    umami:
-        image: ghcr.io/umami-software/umami:postgresql-latest
-        platform: linux/amd64
-        container_name: umami
-        networks:
-            traefik:
-            internal:
-        profiles: ["miscellaneous", "all"]
-        environment:
-            DATABASE_URL: postgresql://umami:${POSTGRES_PASSWORD}@homelab-postgres:5432/umami
-            DATABASE_TYPE: postgresql
-            APP_SECRET: ${UMAMI_APP_SECRET}
-        depends_on:
-            homelab-postgres:
-                condition: service_healthy
-        restart: always
-        healthcheck:
-            test: [CMD-SHELL, "curl http://localhost:3000/api/heartbeat"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
-        labels:
-            traefik.enable: true
-            traefik.http.routers.umami-rtr.rule: Host(`${SUBDOMAIN__UMAMI}.${SECONDARY_DOMAIN_NAME}`)
-            traefik.http.routers.umami-rtr.service: umami-svc
-            traefik.http.services.umami-svc.loadbalancer.server.port: 3000
-            traefik.http.routers.umami-rtr.entrypoints: websecure
-            traefik.http.routers.umami-rtr.middlewares: chain-rate-limit@file
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    platform: linux/amd64
+    container_name: umami
+    networks:
+      traefik:
+      internal:
+    profiles: ["miscellaneous", "all"]
+    environment:
+      DATABASE_URL: postgresql://umami:${POSTGRES_PASSWORD}@homelab-postgres:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET}
+    depends_on:
+      homelab-postgres:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: [CMD-SHELL, "curl http://localhost:3000/api/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    labels:
+      traefik.enable: true
+      traefik.http.routers.umami-rtr.rule: Host(`${SUBDOMAIN__UMAMI}.${SECONDARY_DOMAIN_NAME}`)
+      traefik.http.routers.umami-rtr.service: umami-svc
+      traefik.http.services.umami-svc.loadbalancer.server.port: 3000
+      traefik.http.routers.umami-rtr.entrypoints: websecure
+      traefik.http.routers.umami-rtr.middlewares: chain-rate-limit@file

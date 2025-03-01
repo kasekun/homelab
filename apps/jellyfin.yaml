@@ -21,8 +21,8 @@ services:
       - "${JELLYFIN_TRANSCODE_DIRECTORY:-/tmp}:/transcode"
 
     environment:
-      - TZ=${TZ}
-      - JELLYFIN_PublishedServerUrl=https://${SUBDOMAIN__JELLYFIN}.${DOMAIN_NAME}
+      TZ: ${TZ}
+      JELLYFIN_PublishedServerUrl: https://${SUBDOMAIN__JELLYFIN}.${DOMAIN_NAME}
 
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:

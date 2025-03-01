@@ -3,26 +3,26 @@
 #######################################
 
 services:
-    sabnzbd:
-        container_name: sabnzbd
-        image: lscr.io/linuxserver/sabnzbd:latest
-        profiles: ["downloaders", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/sabnzbd:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.sabnzbd-rtr.rule: Host(`${SUBDOMAIN__SABNZBD}.${DOMAIN_NAME}`)
-            traefik.http.routers.sabnzbd-rtr.entrypoints: websecure
-            traefik.http.routers.sabnzbd-rtr.service: sabnzbd-svc
-            traefik.http.services.sabnzbd-svc.loadbalancer.server.port: 8080
-            traefik.http.routers.sabnzbd-rtr.middlewares: chain-oauth-google@file
+  sabnzbd:
+    container_name: sabnzbd
+    image: lscr.io/linuxserver/sabnzbd:latest
+    profiles: ["downloaders", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/sabnzbd:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.sabnzbd-rtr.rule: Host(`${SUBDOMAIN__SABNZBD}.${DOMAIN_NAME}`)
+      traefik.http.routers.sabnzbd-rtr.entrypoints: websecure
+      traefik.http.routers.sabnzbd-rtr.service: sabnzbd-svc
+      traefik.http.services.sabnzbd-svc.loadbalancer.server.port: 8080
+      traefik.http.routers.sabnzbd-rtr.middlewares: chain-oauth-google@file

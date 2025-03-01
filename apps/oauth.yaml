@@ -4,39 +4,39 @@
 #######################################
 
 secrets:
-    google-oauth:
-        file: ${DOCKER_DIRECTORY}/secrets/google_oauth.secret
+  google-oauth:
+    file: ${DOCKER_DIRECTORY}/secrets/google_oauth.secret
 
 services:
-    oauth:
-        container_name: oauth
-        image: thomseddon/traefik-forward-auth:latest
-        profiles: ["traefik", "core", "all"]
-        environment:
-            CONFIG: /config
-            COOKIE_DOMAIN: ${DOMAIN_NAME}
-            INSECURE_COOKIE: "false"
-            AUTH_HOST: ${SUBDOMAIN__OAUTH}.${DOMAIN_NAME}
-            URL_PATH: /_oauth
-            LOG_LEVEL: DEBUG
-            LIFETIME: 2592000
-            DEFAULT_ACTION: auth
-            DEFAULT_PROVIDER: google
-        secrets:
-            - source: google-oauth
-              target: /config
-        networks:
-            traefik:
-        security_opt:
-            - no-new-privileges:true
-        restart: always
-        platform: linux/amd64
-        depends_on:
-            - duckdns
-        labels:
-            traefik.enable: true
-            traefik.http.routers.oauth-rtr.rule: Host(`${SUBDOMAIN__OAUTH}.${DOMAIN_NAME}`)
-            traefik.http.routers.oauth-rtr.entrypoints: websecure
-            traefik.http.routers.oauth-rtr.service: oauth-svc
-            traefik.http.services.oauth-svc.loadbalancer.server.port: 4181
-            traefik.http.routers.oauth-rtr.middlewares: chain-oauth-google@file
+  oauth:
+    container_name: oauth
+    image: thomseddon/traefik-forward-auth:latest
+    profiles: [ "traefik", "core", "all" ]
+    environment:
+      CONFIG: /config
+      COOKIE_DOMAIN: ${DOMAIN_NAME}
+      INSECURE_COOKIE: false
+      AUTH_HOST: ${SUBDOMAIN__OAUTH}.${DOMAIN_NAME}
+      URL_PATH: /_oauth
+      LOG_LEVEL: DEBUG
+      LIFETIME: 2592000
+      DEFAULT_ACTION: auth
+      DEFAULT_PROVIDER: google
+    secrets:
+      - source: google-oauth
+        target: /config
+    networks:
+      traefik:
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+    platform: linux/amd64
+    depends_on:
+      - duckdns
+    labels:
+      traefik.enable: true
+      traefik.http.routers.oauth-rtr.rule: Host(`${SUBDOMAIN__OAUTH}.${DOMAIN_NAME}`)
+      traefik.http.routers.oauth-rtr.entrypoints: websecure
+      traefik.http.routers.oauth-rtr.service: oauth-svc
+      traefik.http.services.oauth-svc.loadbalancer.server.port: 4181
+      traefik.http.routers.oauth-rtr.middlewares: chain-oauth-google@file

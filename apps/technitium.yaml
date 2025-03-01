@@ -5,10 +5,10 @@ services:
     hostname: technitium-dns
     profiles: ["utilities", "all"]
     environment:
-      - TZ=${TZ}
-      - DNS_SERVER_DOMAIN=${SUBDOMAIN__TECHNITIUM}.${DOMAIN_NAME}
-      - DNS_SERVER_ADMIN_PASSWORD=${PASSWORD__TECHNITIUM}
-      - DNS_SERVER_FORWARDERS=8.8.8.8,8.8.4.4
+      TZ: ${TZ}
+      DNS_SERVER_DOMAIN: ${SUBDOMAIN__TECHNITIUM}.${DOMAIN_NAME}
+      DNS_SERVER_ADMIN_PASSWORD: ${PASSWORD__TECHNITIUM}
+      DNS_SERVER_FORWARDERS: "8.8.8.8,8.8.4.4"
 
     volumes:
       - ${DOCKER_DIRECTORY}/appdata/technitium/dns:/etc/dns
@@ -23,11 +23,10 @@ services:
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     
     labels:
-      traefik.enable: "true"
-      traefik.http.routers.technitium-dns-rtr.rule: "Host(`${SUBDOMAIN__TECHNITIUM}.${DOMAIN_NAME}`)"
-      traefik.http.routers.technitium-dns-rtr.entrypoints: "websecure"
-      traefik.http.routers.technitium-dns-rtr.tls: "true"
-      traefik.http.routers.technitium-dns-rtr.middlewares: "chain-oauth-google@file"
-
-      traefik.http.routers.technitium-dns-rtr.service: "technitium-dns-svc"
-      traefik.http.services.technitium-dns-svc.loadbalancer.server.port: "5380"
+      traefik.enable: true
+      traefik.http.routers.technitium-dns-rtr.rule: Host(`${SUBDOMAIN__TECHNITIUM}.${DOMAIN_NAME}`)
+      traefik.http.routers.technitium-dns-rtr.entrypoints: websecure
+      traefik.http.routers.technitium-dns-rtr.tls: true
+      traefik.http.routers.technitium-dns-rtr.middlewares: chain-oauth-google@file
+      traefik.http.routers.technitium-dns-rtr.service: technitium-dns-svc
+      traefik.http.services.technitium-dns-svc.loadbalancer.server.port: 5380

@@ -5,51 +5,51 @@
 #######################################
 
 services:
-    readarr:
-        container_name: readarr
-        image: lscr.io/linuxserver/readarr:develop
-        profiles: ["books", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/readarr:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-            - ${DOCKER_DIRECTORY}/appdata/calibre:/calibre
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.readarr-rtr.rule: Host(`${SUBDOMAIN__READARR}.${DOMAIN_NAME}`)
-            traefik.http.routers.readarr-rtr.entrypoints: websecure
-            traefik.http.routers.readarr-rtr.service: readarr-svc
-            traefik.http.services.readarr-svc.loadbalancer.server.port: 8787
-            traefik.http.routers.readarr-rtr.middlewares: chain-oauth-google@file
+  readarr:
+    container_name: readarr
+    image: lscr.io/linuxserver/readarr:develop
+    profiles: ["books", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/readarr:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+      - ${DOCKER_DIRECTORY}/appdata/calibre:/calibre
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.readarr-rtr.rule: Host(`${SUBDOMAIN__READARR}.${DOMAIN_NAME}`)
+      traefik.http.routers.readarr-rtr.entrypoints: websecure
+      traefik.http.routers.readarr-rtr.service: readarr-svc
+      traefik.http.services.readarr-svc.loadbalancer.server.port: 8787
+      traefik.http.routers.readarr-rtr.middlewares: chain-oauth-google@file
 
-    readarr-audio:
-        container_name: readarr-audio
-        image: lscr.io/linuxserver/readarr:develop
-        profiles: ["media", "arrs", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/readarr-audio:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.readarr-audio-rtr.rule: Host(`${SUBDOMAIN__READARR_AUDIO}.${DOMAIN_NAME}`)
-            traefik.http.routers.readarr-audio-rtr.entrypoints: websecure
-            traefik.http.routers.readarr-audio-rtr.service: readarr-audio-svc
-            traefik.http.services.readarr-audio-svc.loadbalancer.server.port: 8787
-            traefik.http.routers.readarr-audio-rtr.middlewares: chain-oauth-google@file
+  readarr-audio:
+    container_name: readarr-audio
+    image: lscr.io/linuxserver/readarr:develop
+    profiles: ["media", "arrs", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/readarr-audio:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.readarr-audio-rtr.rule: Host(`${SUBDOMAIN__READARR_AUDIO}.${DOMAIN_NAME}`)
+      traefik.http.routers.readarr-audio-rtr.entrypoints: websecure
+      traefik.http.routers.readarr-audio-rtr.service: readarr-audio-svc
+      traefik.http.services.readarr-audio-svc.loadbalancer.server.port: 8787
+      traefik.http.routers.readarr-audio-rtr.middlewares: chain-oauth-google@file

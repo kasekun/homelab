@@ -4,27 +4,27 @@
 #######################################
 
 services:
-    sftpgo:
-        container_name: sftpgo
-        image: drakkan/sftpgo:latest
-        profiles: ["utilities", "all"]
-        volumes:
-            - ${MEDIA_DIRECTORY}/data:/data
-            - ${DOCKER_DIRECTORY}/appdata/sftpgo/data/:/srv/sftpgo/data/upload
-            - ${DOCKER_DIRECTORY}/appdata/sftpgo/config/:/var/lib/sftpgo/
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.sftpgo-rtr.rule: Host(`${SUBDOMAIN__SFTPGO}.${DOMAIN_NAME}`)
-            traefik.http.routers.sftpgo-rtr.entrypoints: websecure
-            traefik.http.routers.sftpgo-rtr.service: sftpgo-svc
-            traefik.http.services.sftpgo-svc.loadbalancer.server.port: 8080
-            traefik.http.routers.sftpgo-rtr.middlewares: chain-oauth-google@file
+  sftpgo:
+    container_name: sftpgo
+    image: drakkan/sftpgo:latest
+    profiles: ["utilities", "all"]
+    volumes:
+      - ${MEDIA_DIRECTORY}/data:/data
+      - ${DOCKER_DIRECTORY}/appdata/sftpgo/data/:/srv/sftpgo/data/upload
+      - ${DOCKER_DIRECTORY}/appdata/sftpgo/config/:/var/lib/sftpgo/
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.sftpgo-rtr.rule: Host(`${SUBDOMAIN__SFTPGO}.${DOMAIN_NAME}`)
+      traefik.http.routers.sftpgo-rtr.entrypoints: websecure
+      traefik.http.routers.sftpgo-rtr.service: sftpgo-svc
+      traefik.http.services.sftpgo-svc.loadbalancer.server.port: 8080
+      traefik.http.routers.sftpgo-rtr.middlewares: chain-oauth-google@file

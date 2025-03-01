@@ -3,26 +3,26 @@
 #######################################
 
 services:
-    nzbhydra:
-        container_name: nzbhydra
-        image: lscr.io/linuxserver/nzbhydra2:latest
-        profiles: ["utilities", "all"]
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/nzbhydra:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-        security_opt:
-            - no-new-privileges:true
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-        networks:
-            traefik:
-        labels:
-            traefik.enable: true
-            traefik.http.routers.nzbhydra-rtr.rule: Host(`${SUBDOMAIN__NZBHYDRA}.${DOMAIN_NAME}`)
-            traefik.http.routers.nzbhydra-rtr.entrypoints: websecure
-            traefik.http.routers.nzbhydra-rtr.service: nzbhydra-svc
-            traefik.http.services.nzbhydra-svc.loadbalancer.server.port: 5076
-            traefik.http.routers.nzbhydra-rtr.middlewares: chain-oauth-google@file
+  nzbhydra:
+    container_name: nzbhydra
+    image: lscr.io/linuxserver/nzbhydra2:latest
+    profiles: ["utilities", "all"]
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/nzbhydra:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.nzbhydra-rtr.rule: Host(`${SUBDOMAIN__NZBHYDRA}.${DOMAIN_NAME}`)
+      traefik.http.routers.nzbhydra-rtr.entrypoints: websecure
+      traefik.http.routers.nzbhydra-rtr.service: nzbhydra-svc
+      traefik.http.services.nzbhydra-svc.loadbalancer.server.port: 5076
+      traefik.http.routers.nzbhydra-rtr.middlewares: chain-oauth-google@file

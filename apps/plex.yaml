@@ -3,22 +3,22 @@
 #######################################
 
 services:
-    plex:
-        container_name: plex
-        image: lscr.io/linuxserver/plex:latest
-        profiles: ["media", "all"]
-        network_mode: host
-        volumes:
-            - ${DOCKER_DIRECTORY}/appdata/plex:/config
-            - ${MEDIA_DIRECTORY}/data:/data
-            - ${PLEX_TRANSCODE_DIRECTORY:-/tmp}:/transcode
-        devices: # For transcoding
-            - /dev/dri:/dev/dri 
-#            - /dev/dvb:/dev/dvb
-        environment:
-            PUID: ${PUID}
-            PGID: ${PGID}
-            TZ: ${TZ}
-            VERSION: docker
-            PLEX_CLAIM: ${TOKEN__PLEX_CLAIM}
-        restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+  plex:
+    container_name: plex
+    image: lscr.io/linuxserver/plex:latest
+    profiles: ["media", "all"]
+    network_mode: host
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/plex:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+      - ${PLEX_TRANSCODE_DIRECTORY:-/tmp}:/transcode
+    devices: # For transcoding
+      - /dev/dri:/dev/dri 
+#      - /dev/dvb:/dev/dvb
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      VERSION: docker
+      PLEX_CLAIM: ${TOKEN__PLEX_CLAIM}
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
