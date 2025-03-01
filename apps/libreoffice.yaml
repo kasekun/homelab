@@ -7,20 +7,20 @@ services:
     libreoffice:
         container_name: libreoffice
         image: lscr.io/linuxserver/libreoffice:latest
-        profiles: ["miscellaneous", "all"]
+        profiles: [ "miscellaneous", "all" ]
         environment:
-            - PUID=${PUID}
-            - PGID=${PGID}
-            - TZ=${TZ}
+          - PUID=${PUID}
+          - PGID=${PGID}
+          - TZ=${TZ}
         volumes:
-            - ${DOCKER_DIRECTORY}/appdata/libreoffice:/config
+          - ${DOCKER_DIRECTORY}/appdata/libreoffice:/config
         security_opt:
-            - no-new-privileges:true
+          - no-new-privileges:true
         networks:
             traefik:
         labels:
             traefik.enable: true
-            traefik.http.routers.libreoffice-rtr.rule: Host(`libreoffice.${DOMAIN_NAME}`)
+            traefik.http.routers.libreoffice-rtr.rule: Host(`${SUBDOMAIN__LIBREOFFICE}.${DOMAIN_NAME}`)
             traefik.http.routers.libreoffice-rtr.service: libreoffice-svc
             traefik.http.services.libreoffice-svc.loadbalancer.server.port: 8888
             traefik.http.routers.libreoffice-rtr.entrypoints: websecure
