@@ -17,6 +17,7 @@ include:
   #############################################################################
 
   - apps/plex.yaml # Plex (Media Server)
+  - apps/bazarr.yaml # Bazarr (Subtitle Downloads)
   # - apps/jellyfin.yaml # Jellyfin (Media Server) # Note - not properly working
   - apps/sonarr.yaml # Sonarr (TV Show Downloads)
   - apps/radarr.yaml # Radarr (Movie Downloads)

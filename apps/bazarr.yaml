@@ -1,0 +1,24 @@
+services:
+  bazarr:
+    container_name: bazarr
+    image: ghcr.io/hotio/bazarr:latest
+    profiles: [ "media", "all" ]
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=${UMASK}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIRECTORY}/appdata/bazarr:/config
+      - ${MEDIA_DIRECTORY}/data:/data
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.bazarr-rtr.rule: Host(`${SUBDOMAIN__BAZARR}.${DOMAIN_NAME}`)
+      traefik.http.routers.bazarr-rtr.entrypoints: websecure
+      traefik.http.routers.bazarr-rtr.service: bazarr-svc
+      traefik.http.services.bazarr-svc.loadbalancer.server.port: 6767
+      traefik.http.routers.bazarr-rtr.middlewares: chain-oauth-google@file
