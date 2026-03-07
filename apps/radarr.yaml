@@ -26,3 +26,13 @@ services:
       traefik.http.routers.radarr-rtr.service: radarr-svc
       traefik.http.services.radarr-svc.loadbalancer.server.port: 7878
       traefik.http.routers.radarr-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Radarr
+      homepage.icon: radarr.png
+      homepage.href: https://radarr.${DOMAIN_NAME}
+      homepage.description: Movies management
+      homepage.weight: 1
+      homepage.widget.type: radarr
+      homepage.widget.url: https://radarr.${DOMAIN_NAME}
+      homepage.widget.key: ${API_KEY__RADARR}

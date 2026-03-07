@@ -17,3 +17,9 @@ services:
       traefik.http.routers.profilarr-rtr.service: profilarr-svc
       traefik.http.services.profilarr-svc.loadbalancer.server.port: 6868
       traefik.http.routers.profilarr-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Profilarr
+      homepage.icon: profilarr.png
+      homepage.href: https://profilarr.${DOMAIN_NAME}
+      homepage.weight: 1

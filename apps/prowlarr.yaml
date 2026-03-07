@@ -25,3 +25,13 @@ services:
       traefik.http.routers.prowlarr-rtr.service: prowlarr-svc
       traefik.http.services.prowlarr-svc.loadbalancer.server.port: 9696
       traefik.http.routers.prowlarr-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Prowlarr
+      homepage.icon: prowlarr.png
+      homepage.href: https://prowlarr.${DOMAIN_NAME}
+      homepage.description: Indexers management
+      homepage.weight: 4
+      homepage.widget.type: prowlarr
+      homepage.widget.url: https://prowlarr.${DOMAIN_NAME}
+      homepage.widget.key: ${API_KEY__PROWLARR}

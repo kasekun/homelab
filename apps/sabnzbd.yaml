@@ -26,3 +26,13 @@ services:
       traefik.http.routers.sabnzbd-rtr.service: sabnzbd-svc
       traefik.http.services.sabnzbd-svc.loadbalancer.server.port: 8080
       traefik.http.routers.sabnzbd-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Downloads
+      homepage.name: Sabnzbd
+      homepage.icon: sabnzbd.png
+      homepage.href: https://sabnzbd.${DOMAIN_NAME}
+      homepage.weight: 1
+      homepage.widget.type: sabnzbd
+      homepage.widget.url: https://sabnzbd.${DOMAIN_NAME}
+      homepage.widget.password: ${ADMIN_PASSWORD}
+      homepage.widget.username: ${ADMIN_USER}

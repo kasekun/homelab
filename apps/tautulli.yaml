@@ -27,3 +27,13 @@ services:
       traefik.http.routers.tautulli-rtr.service: tautulli-svc
       traefik.http.services.tautulli-svc.loadbalancer.server.port: 8181
       traefik.http.routers.tautulli-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Tautulli
+      homepage.icon: tautulli.png
+      homepage.href: https://tautulli.${DOMAIN_NAME}
+      homepage.weight: 1
+      homepage.widget.type: tautulli
+      homepage.widget.url: https://tautulli.${DOMAIN_NAME}
+      homepage.widget.password: ${ADMIN_PASSWORD}
+      homepage.widget.username: ${ADMIN_USER}

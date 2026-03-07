@@ -30,3 +30,13 @@ services:
       traefik.http.routers.technitium-dns-rtr.middlewares: chain-oauth-google@file
       traefik.http.routers.technitium-dns-rtr.service: technitium-dns-svc
       traefik.http.services.technitium-dns-svc.loadbalancer.server.port: 5380
+
+      homepage.group: Tools
+      homepage.name: Technitium DNS
+      homepage.icon: technitium.png
+      homepage.href: https://technitium.${DOMAIN_NAME}
+      homepage.weight: 1
+      homepage.widget.type: technitium
+      homepage.widget.url: https://technitium.${DOMAIN_NAME}
+      homepage.widget.password: ${PASSWORD__TECHNITIUM}
+      homepage.widget.username: ${ADMIN_USER}

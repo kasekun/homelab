@@ -6,3 +6,5 @@ secrets/*
 
 appdata/*
 !appdata/.gitkeep
+!appdata/homepage/docker.yaml
+!appdata/homepage/services.yaml

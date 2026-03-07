@@ -35,3 +35,13 @@ services:
       retries: 1
     labels: # traefik labels are handled inside gluetun.yaml
       deunhealth.restart.on.unhealthy: true
+
+      homepage.group: Downloads
+      homepage.name: Qbittorrent
+      homepage.icon: qbittorrent.png
+      homepage.href: https://${SUBDOMAIN__QBITTORRENT}.${DOMAIN_NAME}
+      homepage.weight: 1
+      homepage.widget.type: qbittorrent
+      homepage.widget.url: https://${SUBDOMAIN__QBITTORRENT}.${DOMAIN_NAME}
+      homepage.widget.password: ${ADMIN_PASSWORD}
+      homepage.widget.username: ${ADMIN_USER}

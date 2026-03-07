@@ -26,3 +26,9 @@ services:
       traefik.http.routers.nzbhydra-rtr.service: nzbhydra-svc
       traefik.http.services.nzbhydra-svc.loadbalancer.server.port: 5076
       traefik.http.routers.nzbhydra-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Downloads
+      homepage.name: Nzbhydra
+      homepage.icon: nzbhydra.png
+      homepage.href: https://nzbhydra.${DOMAIN_NAME}
+      homepage.weight: 1

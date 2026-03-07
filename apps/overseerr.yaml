@@ -25,3 +25,12 @@ services:
       traefik.http.routers.overseerr-rtr.service: overseerr-svc
       traefik.http.services.overseerr-svc.loadbalancer.server.port: 5055
       traefik.http.routers.overseerr-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Overseerr
+      homepage.icon: overseerr.png
+      homepage.href: https://overseerr.${DOMAIN_NAME}
+      homepage.weight: 1
+      homepage.widget.type: overseerr
+      homepage.widget.url: https://overseerr.${DOMAIN_NAME}
+      homepage.widget.key: ${API_KEY__OVERSEERR}
