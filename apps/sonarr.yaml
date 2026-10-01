@@ -27,12 +27,12 @@ services:
       traefik.http.services.sonarr-svc.loadbalancer.server.port: 8989
       traefik.http.routers.sonarr-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Media Collectors
+      homepage.group: Automation
       homepage.name: Sonarr
       homepage.icon: sonarr.png
       homepage.href: https://sonarr.${DOMAIN_NAME}
-      homepage.description: TV Series management
-      homepage.weight: 0
+      homepage.description: TV series management
+      homepage.weight: 1
       homepage.widget.type: sonarr
       homepage.widget.url: https://sonarr.${DOMAIN_NAME}
       homepage.widget.key: ${API_KEY__SONARR}

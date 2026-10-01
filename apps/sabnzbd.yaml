@@ -31,7 +31,8 @@ services:
       homepage.name: Sabnzbd
       homepage.icon: sabnzbd.png
       homepage.href: https://sabnzbd.${DOMAIN_NAME}
-      homepage.weight: 1
+      homepage.description: Usenet downloads
+      homepage.weight: 0
       homepage.widget.type: sabnzbd
       homepage.widget.url: https://sabnzbd.${DOMAIN_NAME}
       homepage.widget.password: ${ADMIN_PASSWORD}

@@ -92,11 +92,12 @@ services:
       traefik.http.routers.traefik-rtr.service: api@internal
       traefik.http.routers.traefik-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Tools
-      homepage.name: traefik
+      homepage.group: Infrastructure
+      homepage.name: Traefik
       homepage.icon: traefik.png
       homepage.href: https://traefik.${DOMAIN_NAME}
-      homepage.weight: 3
+      homepage.description: Reverse proxy & certificates
+      homepage.weight: 0
       homepage.widget.type: traefik
       homepage.widget.url: https://traefik.${DOMAIN_NAME}
       homepage.widget.username: ${ADMIN_USER}

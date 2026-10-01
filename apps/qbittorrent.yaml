@@ -40,6 +40,7 @@ services:
       homepage.name: Qbittorrent
       homepage.icon: qbittorrent.png
       homepage.href: https://${SUBDOMAIN__QBITTORRENT}.${DOMAIN_NAME}
+      homepage.description: Torrent downloads
       homepage.weight: 1
       homepage.widget.type: qbittorrent
       homepage.widget.url: https://${SUBDOMAIN__QBITTORRENT}.${DOMAIN_NAME}

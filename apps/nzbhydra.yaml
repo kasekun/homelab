@@ -31,4 +31,5 @@ services:
       homepage.name: Nzbhydra
       homepage.icon: nzbhydra.png
       homepage.href: https://nzbhydra.${DOMAIN_NAME}
-      homepage.weight: 1
+      homepage.description: Usenet indexer meta-search
+      homepage.weight: 2

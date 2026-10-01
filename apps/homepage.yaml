@@ -17,13 +17,13 @@ services:
 
   homepage:
     container_name: homepage
-    image: ghcr.io/gethomepage/homepage:latest
+    image: ghcr.io/gethomepage/homepage:v1.12.3 # pinned: v2.x's docker-provider client errors (`dockerStatuses ... reading 'conn'`) break label discovery and fall back to demo content
     profiles: [ "utilities", "all" ]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
-      HOMEPAGE_ALLOWED_HOSTS: "www.sneets.net,sneets.net,${DOMAIN_NAME},www.${DOMAIN_NAME}"
+      HOMEPAGE_ALLOWED_HOSTS: "www.sneets.net,sneets.net,${DOMAIN_NAME},www.${DOMAIN_NAME},${SUBDOMAIN__HOMEPAGE}.${DOMAIN_NAME}"
     security_opt:
       - no-new-privileges:true
     volumes:

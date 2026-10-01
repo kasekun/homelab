@@ -23,12 +23,12 @@ services:
       traefik.http.services.bazarr-svc.loadbalancer.server.port: 6767
       traefik.http.routers.bazarr-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Media Collectors
+      homepage.group: Automation
       homepage.name: Bazarr
       homepage.icon: bazarr.png
       homepage.href: https://bazarr.${DOMAIN_NAME}
       homepage.description: Subtitle management
-      homepage.weight: 0
+      homepage.weight: 3
       homepage.widget.type: bazarr
       homepage.widget.url: https://bazarr.${DOMAIN_NAME}
       homepage.widget.key: ${API_KEY__BAZARR}

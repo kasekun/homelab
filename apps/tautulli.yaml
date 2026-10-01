@@ -28,10 +28,11 @@ services:
       traefik.http.services.tautulli-svc.loadbalancer.server.port: 8181
       traefik.http.routers.tautulli-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Media Collectors
+      homepage.group: Media Server
       homepage.name: Tautulli
       homepage.icon: tautulli.png
       homepage.href: https://tautulli.${DOMAIN_NAME}
+      homepage.description: Plex playback analytics
       homepage.weight: 1
       homepage.widget.type: tautulli
       homepage.widget.url: https://tautulli.${DOMAIN_NAME}

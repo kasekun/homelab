@@ -24,9 +24,11 @@ services:
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
 
     labels:
-      homepage.group: Media Collectors
+      homepage.group: Media Server
+      homepage.name: Plex
       homepage.icon: plex.png
       homepage.href: https://app.plex.tv
-      homepage.description: Watch movies and TV shows.
+      homepage.description: Watch movies and TV shows
+      homepage.weight: 0
       homepage.server: localhost
       homepage.container: plex

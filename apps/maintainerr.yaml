@@ -26,11 +26,11 @@ services:
       traefik.http.services.maintainerr-svc.loadbalancer.server.port: 6246
       traefik.http.routers.maintainerr-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Media Collectors
+      homepage.group: Automation
       homepage.name: Maintainerr
       homepage.icon: maintainerr.png
       homepage.href: https://maintainerr.${DOMAIN_NAME}
       homepage.description: Automated library cleanup
-      homepage.weight: 1
+      homepage.weight: 5
       homepage.widget.type: maintainerr
       homepage.widget.url: http://maintainerr:6246

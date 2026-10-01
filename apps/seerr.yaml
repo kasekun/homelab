@@ -31,11 +31,12 @@ services:
       traefik.http.services.seerr-svc.loadbalancer.server.port: 5055
       traefik.http.routers.seerr-rtr.middlewares: chain-oauth-google@file
 
-      homepage.group: Media Collectors
+      homepage.group: Requests
       homepage.name: Seerr
       homepage.icon: seerr.png
       homepage.href: https://seerr.${DOMAIN_NAME}
-      homepage.weight: 1
+      homepage.description: Request movies & TV shows
+      homepage.weight: 0
       homepage.widget.type: seerr
       homepage.widget.url: https://seerr.${DOMAIN_NAME}
       homepage.widget.key: ${API_KEY__SEERR}
