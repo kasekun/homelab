@@ -2,9 +2,14 @@
 .env
 
 secrets/*
+temp/*
 !secrets/.gitkeep
 
 appdata/*
 !appdata/.gitkeep
 !appdata/homepage/docker.yaml
 !appdata/homepage/services.yaml
+
+# jdc CLI build output and cache
+homelab-cli/jdc
+.jdc-cache.json

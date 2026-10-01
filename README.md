@@ -9,24 +9,30 @@ and managed through the convenient `jdc` command-line tool.
 ### Quick Start
 
 1. Clone this repository
-2. Enable tab completion for the `jdc` command by adding the following to your `.bashrc` or `.zshrc`: !Remember to replace `path/to/homelab` with the actual path to the repository.
+2. Install [direnv](https://direnv.net/) and run `direnv allow` inside the repo to put `jdc` on PATH
+3. Build the CLI and set up zsh completion (requires Go):
+
 ```bash
-[[ -f "${HOME}/path/to/homelab/jdc/bin/_jdc_completion.sh" ]] && source "${HOME}/path/to/homelab/jdc/bin/_jdc_completion.sh"
+make install-jdc
 ```
 
 Walk through the setup process (i need to populate this section fully, but in a nutshell)
 1. Setup traefik, duckdns, cloudflare by following this guide https://www.simplehomelab.com/traefik-v3-docker-compose-guide-2024/
   - This guide is a little frustrating, but it works.
 
-2. In your `.env` file add your domain_name, duckdns, and cloudflare detials.
+2. Copy `.env-example` to `.env` and fill in your details:
+
+```bash
+jdc script copy-env
+```
 
 3. !important: uncomment the `LETS_ENCRYPT_ENV` line so that failed letsencrypt attempts hit the staging servers and don't get you timed out.
 
 4. Spin up the traefik related services, and monitor the traefik logs to ensure the certificates are being issued.
 
 ```bash
-jdc up -p traefik
-jdc logs traefik
+jdc docker up -p traefik
+jdc docker logs -s traefik
 ```
 
 5. Once the certificates are being issued correctly, you can comment out the `LETS_ENCRYPT_ENV` line again.
@@ -34,13 +40,13 @@ jdc logs traefik
 6. Spin up the rest of the services.
 
 ```bash
-jdc up -p all
+jdc docker up -p all
 ```
 
 or target specific services
 
 ```bash
-jdc up sonarr radarr prowlarr plex
+jdc docker up -s sonarr -s radarr -s prowlarr -s plex
 ```
 
 7. Run through setup of these services following guides on those services easily found elsewhere.
@@ -63,23 +69,37 @@ Each service belongs to a [docker compose profile] that can be managed independe
 ### Common Commands
 
 ```bash
+# Build the CLI (first time and after updates)
+make install-jdc
+
 # Start all services
-jdc up
+jdc docker up
 
 # Start just core services
-jdc up -p core
+jdc docker up -p core
 
 # View logs for a specific service
-jdc logs sonarr
+jdc docker logs -s sonarr
 
-# Update all containers
-jdc update -p all
+# Update all containers in a profile
+jdc docker update -p all
 
 # List available containers
-jdc containers
+jdc docker containers
+
+# List available profiles
+jdc docker profiles
+
+# Validate your .env file
+jdc script check-env
+
+# Check disk space
+jdc script check-space
 
 # Show help
 jdc --help
+jdc docker --help
+jdc script --help
 ```
 
 [traefik]: https://github.com/traefik/traefik
