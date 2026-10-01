@@ -13,3 +13,5 @@ appdata/*
 # jdc CLI build output and cache
 homelab-cli/jdc
 .jdc-cache.json
+
+.cursor/*
