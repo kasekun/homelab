@@ -24,6 +24,7 @@ include:
   - apps/prowlarr.yaml # Prowlarr (Indexer)
   - apps/overseerr.yaml # Overseerr (Media Requests)
   - apps/tautulli.yaml # Tautulli (Plex Analytics)
+  - apps/maintainerr.yaml # Maintainerr (Automated Library Cleanup)
 
   #############################################################################
   # READING (profile=books)

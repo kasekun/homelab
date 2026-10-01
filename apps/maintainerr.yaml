@@ -1,0 +1,36 @@
+#######################################
+# MAINTAINERR (LIBRARY CLEANUP)
+#######################################
+
+services:
+  maintainerr:
+    container_name: maintainerr
+    image: ghcr.io/maintainerr/maintainerr:latest
+    profiles: [ "media", "all" ]
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${DOCKER_DIRECTORY}/appdata/maintainerr:/opt/data
+      - ${MEDIA_DIRECTORY}/data:/data # matches Radarr/Sonarr root-folder path; enables leftover-folder cleanup
+    security_opt:
+      - no-new-privileges:true
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      traefik:
+    labels:
+      traefik.enable: true
+      traefik.http.routers.maintainerr-rtr.rule: Host(`${SUBDOMAIN__MAINTAINERR}.${DOMAIN_NAME}`)
+      traefik.http.routers.maintainerr-rtr.entrypoints: websecure
+      traefik.http.routers.maintainerr-rtr.service: maintainerr-svc
+      traefik.http.services.maintainerr-svc.loadbalancer.server.port: 6246
+      traefik.http.routers.maintainerr-rtr.middlewares: chain-oauth-google@file
+
+      homepage.group: Media Collectors
+      homepage.name: Maintainerr
+      homepage.icon: maintainerr.png
+      homepage.href: https://maintainerr.${DOMAIN_NAME}
+      homepage.description: Automated library cleanup
+      homepage.weight: 1
+      homepage.widget.type: maintainerr
+      homepage.widget.url: http://maintainerr:6246
