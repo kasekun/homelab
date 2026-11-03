@@ -15,3 +15,5 @@ homelab-cli/jdc
 .jdc-cache.json
 
 .cursor/*
+
+__pycache__/

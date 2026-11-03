@@ -1,0 +1,33 @@
+[project]
+name = "jplex"
+version = "0.1.0"
+description = "CLI tools for Plex search, playback planning, and SHIELD launch."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "rapidfuzz>=3.9",
+    "ruff>=0.17.3",
+]
+
+[project.scripts]
+jplex = "jplex.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jplex"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
