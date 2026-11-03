@@ -72,8 +72,8 @@ Each service belongs to a [docker compose profile] that can be managed independe
 # Build the CLI (first time and after updates)
 make install-jdc
 
-# Start all services
-jdc docker up
+# Start all profile-managed services
+jdc docker up -p all
 
 # Start just core services
 jdc docker up -p core
@@ -90,6 +90,9 @@ jdc docker containers
 # List available profiles
 jdc docker profiles
 
+# Validate jdc's view of docker compose services and profiles
+jdc docker doctor
+
 # Validate your .env file
 jdc script check-env
 
@@ -101,6 +104,8 @@ jdc --help
 jdc docker --help
 jdc script --help
 ```
+
+Lifecycle commands that start, stop, restart, pull, or update services require an explicit target. Use `-s <service>` for one service or `-p all` for the full profile-managed stack. `jdc docker down` is reserved for a confirmed full project teardown; use `jdc docker stop -p all` when you only want to stop containers without removing them.
 
 [traefik]: https://github.com/traefik/traefik
 [OAuth]: https://github.com/thomseddon/traefik-forward-auth

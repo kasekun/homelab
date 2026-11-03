@@ -13,7 +13,7 @@ var dockerPullCmd = &cobra.Command{
 	Example: `  jdc docker pull -s sonarr
   jdc docker pull -p media`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services, err := resolveServices(pullServices)
+		services, err := resolveRequiredServices("pull", pullServices)
 		if err != nil {
 			return err
 		}

@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -14,26 +12,20 @@ var selfCmd = &cobra.Command{
 }
 
 var selfRefreshCmd = &cobra.Command{
-	Use:   "refresh",
-	Short: "Rebuild .jdc-cache.json from the current compose configuration",
-	Args:  cobra.NoArgs,
+	Use:     "refresh",
+	Short:   "Rebuild .jdc-cache.json from the current compose configuration",
+	Args:    cobra.NoArgs,
 	Example: `  jdc self refresh`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logInfo("Refreshing cache at %s...", cachePath(repoRoot))
 
-		servicesOut, err := composeOutput("--profile", "all", "config", "--services")
+		composeServices, err := loadComposeServices()
 		if err != nil {
-			return fmt.Errorf("querying services: %w", err)
-		}
-		profilesOut, err := composeOutput("--profile", "all", "config", "--profiles")
-		if err != nil {
-			return fmt.Errorf("querying profiles: %w", err)
+			return fmt.Errorf("querying compose services: %w", err)
 		}
 
-		services := strings.Fields(servicesOut)
-		profiles := strings.Fields(profilesOut)
-		sort.Strings(services)
-		sort.Strings(profiles)
+		services := serviceNames(composeServices)
+		profiles := profilesFromServices(composeServices)
 
 		cache := &jdcCache{
 			Services: services,

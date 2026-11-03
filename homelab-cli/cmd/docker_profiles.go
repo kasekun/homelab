@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -14,13 +12,11 @@ var dockerProfilesCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Example: `  jdc docker profiles`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		out, err := composeOutput("--profile", "all", "config", "--profiles")
+		services, err := loadComposeServices()
 		if err != nil {
 			return fmt.Errorf("listing profiles: %w", err)
 		}
-		profiles := strings.Fields(out)
-		sort.Strings(profiles)
-		for _, p := range profiles {
+		for _, p := range profilesFromServices(services) {
 			fmt.Println(p)
 		}
 		return nil

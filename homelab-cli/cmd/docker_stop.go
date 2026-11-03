@@ -13,7 +13,7 @@ var dockerStopCmd = &cobra.Command{
 	Example: `  jdc docker stop -s sonarr
   jdc docker stop -p media`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services, err := resolveServices(stopServices)
+		services, err := resolveRequiredServices("stop", stopServices)
 		if err != nil {
 			return err
 		}

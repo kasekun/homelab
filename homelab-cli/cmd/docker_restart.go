@@ -13,7 +13,7 @@ var dockerRestartCmd = &cobra.Command{
 	Example: `  jdc docker restart -s sonarr
   jdc docker restart -p core`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services, err := resolveServices(restartServices)
+		services, err := resolveRequiredServices("restart", restartServices)
 		if err != nil {
 			return err
 		}

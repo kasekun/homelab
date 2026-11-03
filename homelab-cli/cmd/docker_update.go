@@ -13,7 +13,7 @@ var dockerUpdateCmd = &cobra.Command{
 	Example: `  jdc docker update -s sonarr
   jdc docker update -p media`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services, err := resolveServices(updateServices)
+		services, err := resolveRequiredServices("update", updateServices)
 		if err != nil {
 			return err
 		}

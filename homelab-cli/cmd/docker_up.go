@@ -10,11 +10,10 @@ var dockerUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Start services detached (optionally targeting specific services or a profile)",
 	Args:  cobra.NoArgs,
-	Example: `  jdc docker up
-  jdc docker up -s sonarr -s radarr
+	Example: `  jdc docker up -s sonarr -s radarr
   jdc docker up -p core`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services, err := resolveServices(upServices)
+		services, err := resolveRequiredServices("up", upServices)
 		if err != nil {
 			return err
 		}
