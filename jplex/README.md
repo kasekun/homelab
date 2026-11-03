@@ -4,11 +4,22 @@
 
 It keeps Plex API/catalog/search/planning logic testable and isolates ADB calls in one launcher module.
 
+## Requirements
+
+- A Plex server reachable from the machine running `jplex`.
+- A Plex token with access to that server (see instructions below)
+- An NVIDIA SHIELD TV with Plex installed (other Android TV devices may work, but are untested)
+- `adb` installed on the machine running `jplex`, or `JPLEX_ADB_BIN` set to the `adb` executable.
+- Network access from the local machine to the SHIELD's ADB endpoint, usually `<shield-ip>:5555`.
+- Android Developer Options enabled on the SHIELD.
+- Network debugging enabled on the SHIELD.
+- Debug access approved on the SHIELD when `adb` first connects.
+
 ## Setup
 
 ```bash
 cd jplex
-uv sync
+uv sync  # don't have uv? https://docs.astral.sh/uv/getting-started/installation/
 cp .env-example .env
 ```
 
