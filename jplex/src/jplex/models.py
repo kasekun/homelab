@@ -51,6 +51,7 @@ class PlaybackPlan:
     mode: PlayMode
     uri: str
     url: str
+    details_url: str | None = None
     offset: int = 0
     key: str | None = None
     shuffle: bool = False
@@ -70,4 +71,5 @@ class PlaybackPlan:
             "offset": self.offset,
             "shuffle": self.shuffle,
             "url": self.url,
+            "detailsUrl": self.details_url,
         }

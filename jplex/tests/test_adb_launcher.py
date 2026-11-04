@@ -46,11 +46,31 @@ def test_dry_run_contains_safe_adb_launch_command() -> None:
         "https://watch.plex.tv/watch/video?uri=x&offset=0"
     )
 
+    assert commands[-2].args == [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/home -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
     assert commands[-1].args == [
         "adb",
         "-s",
         "192.168.1.126:5555",
         "shell",
+        "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=x&offset=0' -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+
+
+def test_dry_run_seeds_details_page_when_provided() -> None:
+    commands = ADBLauncher(settings()).dry_run_commands(
+        "https://watch.plex.tv/watch/video?uri=x&offset=0",
+        "https://watch.plex.tv/libraries/m/show/item/10",
+    )
+
+    assert [command.args[-1] for command in commands[-3:]] == [
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/home -n com.plexapp.android/tv.plex.app.MainActivity",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/libraries/m/show/item/10 -n com.plexapp.android/tv.plex.app.MainActivity",
         "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=x&offset=0' -n com.plexapp.android/tv.plex.app.MainActivity",
     ]
 
@@ -179,6 +199,20 @@ def test_launch_leaves_active_player_before_watch_intent(
         "shell",
         "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=x&offset=0&shuffle=1' -n com.plexapp.android/tv.plex.app.MainActivity",
     ]
+    home = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/home -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    details = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/libraries/m/show/item/10 -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
     fake = FakeRunner(
         {
             ("adb", "devices", "-l"): completed(
@@ -234,12 +268,74 @@ def test_launch_leaves_active_player_before_watch_intent(
             ],
             tuple(back): completed([]),
             tuple(watch): completed([]),
+            tuple(home): completed([]),
+            tuple(details): completed([]),
         }
     )
 
-    ADBLauncher(settings(), fake).launch(url)
+    ADBLauncher(settings(), fake).launch(
+        url, "https://watch.plex.tv/libraries/m/show/item/10"
+    )
 
-    assert fake.calls.index(back) < fake.calls.index(watch)
+    assert (
+        fake.calls.index(back)
+        < fake.calls.index(home)
+        < fake.calls.index(details)
+        < fake.calls.index(watch)
+    )
+
+
+def test_prepare_clears_stale_player_screen_without_audio(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/adb")
+    monkeypatch.setattr("jplex.adb_launcher.time.sleep", lambda _: None)
+    home = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/home -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    fake = FakeRunner(
+        {
+            ("adb", "devices", "-l"): completed(
+                [], "List of devices attached\n192.168.1.126:5555     device\n"
+            ),
+            (
+                "adb",
+                "-s",
+                "192.168.1.126:5555",
+                "shell",
+                "getprop",
+                "ro.product.model",
+            ): completed([], "SHIELD Android TV\n"),
+            (
+                "adb",
+                "-s",
+                "192.168.1.126:5555",
+                "shell",
+                "dumpsys",
+                "window",
+            ): completed(
+                [],
+                "mCurrentFocus=Window{abc u0 com.plexapp.android/tv.plex.app.MainActivity}\n",
+            ),
+            (
+                "adb",
+                "-s",
+                "192.168.1.126:5555",
+                "shell",
+                "pidof",
+                "com.plexapp.android",
+            ): completed([], ""),
+            tuple(home): completed([]),
+        }
+    )
+
+    ADBLauncher(settings(), fake).prepare()
+
+    assert home in fake.calls
 
 
 def test_adb_check_reports_missing_adb(monkeypatch: pytest.MonkeyPatch) -> None:

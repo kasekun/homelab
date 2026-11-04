@@ -57,6 +57,7 @@ def test_movie_resume_uses_view_offset_seconds() -> None:
 
     assert plan.offset == 125
     assert plan.uri.endswith("/library/metadata/1")
+    assert plan.details_url == "https://watch.plex.tv/libraries/machine/movie/item/1"
 
 
 def test_show_resume_uses_on_deck_episode_uri_not_show_key() -> None:
@@ -66,6 +67,7 @@ def test_show_resume_uses_on_deck_episode_uri_not_show_key() -> None:
     assert plan.key is None
     assert plan.offset == 92
     assert plan.target_rating_key == 21
+    assert plan.details_url is None
 
 
 def test_playlist_uri_comes_from_rating_key_not_api_key() -> None:
@@ -78,4 +80,7 @@ def test_playlist_uri_comes_from_rating_key_not_api_key() -> None:
     assert (
         playlist.uri == "server://machine/com.plexapp.plugins.library/playlists/49444"
     )
-    assert plan_playback(playlist, "shuffle", None, "machine").shuffle is True
+    plan = plan_playback(playlist, "shuffle", None, "machine")
+
+    assert plan.shuffle is True
+    assert plan.details_url == "https://watch.plex.tv/libraries/machine/playlist/49444"

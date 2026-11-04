@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 from .models import CatalogItem
@@ -83,7 +84,7 @@ def load_catalog(cache_path: Path) -> Catalog:
 
 def write_catalog(cache_path: Path, catalog: Catalog) -> None:
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    cache_path.write_text(
+    data = (
         json.dumps(
             {
                 "metadata": catalog.metadata,
@@ -94,3 +95,19 @@ def write_catalog(cache_path: Path, catalog: Catalog) -> None:
         )
         + "\n"
     )
+    temp_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=cache_path.parent,
+            prefix=f".{cache_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+            temp_file.write(data)
+        temp_path.replace(cache_path)
+    finally:
+        if temp_path and temp_path.exists():
+            temp_path.unlink()

@@ -5,7 +5,7 @@ from click.testing import CliRunner
 
 from jplex import cli
 from jplex.catalog import content_uri
-from jplex.models import CatalogItem
+from jplex.models import CatalogItem, PlaybackPlan
 from jplex.plex_api import PlexAPIError
 
 
@@ -51,3 +51,40 @@ def test_cache_refresh_reports_plex_errors_as_cli_errors(monkeypatch) -> None:
     assert "Error: plex is down" in result.output
     assert result.exception is not None
     assert not isinstance(result.exception, PlexAPIError)
+
+
+def test_play_prepares_before_planning_resume(monkeypatch) -> None:
+    events: list[str] = []
+    target = item(10, "show")
+    plan = PlaybackPlan(
+        item=target,
+        mode="resume",
+        uri=target.uri,
+        url="https://watch.plex.tv/watch/video?uri=x&offset=1",
+        details_url="https://watch.plex.tv/libraries/m/show/item/10",
+        offset=1,
+    )
+
+    class FakeLauncher:
+        def __init__(self, settings) -> None:
+            pass
+
+        def prepare(self) -> None:
+            events.append("prepare")
+
+        def start(self, url: str, details_url: str | None = None) -> None:
+            events.append("start")
+
+    def build_plan(*args, **kwargs):
+        events.append("plan")
+        return plan
+
+    monkeypatch.setattr(cli, "get_catalog", lambda ctx: object())
+    monkeypatch.setattr(cli, "resolve_or_exit", lambda *args: target)
+    monkeypatch.setattr(cli, "build_plan_or_exit", build_plan)
+    monkeypatch.setattr(cli, "ADBLauncher", FakeLauncher)
+
+    result = CliRunner().invoke(cli.main, ["play", "show"])
+
+    assert result.exit_code == 0
+    assert events == ["prepare", "plan", "start"]

@@ -173,16 +173,27 @@ def play(
     catalog = get_catalog(ctx)
     item = resolve_or_exit(catalog, target, item_type, year, 10)
     mode = requested_mode(mode, from_start, shuffle)
-    plan = build_plan_or_exit(ctx, catalog, item, mode)
+    plan_mode = effective_mode(item, mode)
     launcher = ADBLauncher(current_settings(ctx))
+    prepared = False
+    if not dry_run and plan_mode == "resume" and item.type in {"movie", "show"}:
+        try:
+            launcher.prepare()
+        except ADBError as error:
+            raise click.ClickException(str(error)) from error
+        prepared = True
+    plan = build_plan_or_exit(ctx, catalog, item, plan_mode)
     if dry_run:
         click.echo(json.dumps(plan.to_json(), indent=2))
         click.echo("\nADB commands:")
-        for command in launcher.dry_run_commands(plan.url):
+        for command in launcher.dry_run_commands(plan.url, plan.details_url):
             click.echo(command.display())
         return
     try:
-        launcher.launch(plan.url)
+        if prepared:
+            launcher.start(plan.url, plan.details_url)
+        else:
+            launcher.launch(plan.url, plan.details_url)
     except ADBError as error:
         raise click.ClickException(str(error)) from error
 

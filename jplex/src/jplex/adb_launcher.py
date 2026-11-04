@@ -15,6 +15,9 @@ class ADBError(RuntimeError):
     pass
 
 
+HOME_URL = "https://watch.plex.tv/home"
+
+
 class Runner(Protocol):
     def run(
         self, args: list[str], timeout: int = 30
@@ -69,9 +72,11 @@ class ADBLauncher:
         ).stdout.strip()
         return f"connected to {self.settings.adb_device} ({model or 'unknown model'})"
 
-    def dry_run_commands(self, url: str) -> list[ADBCommand]:
+    def dry_run_commands(
+        self, url: str, details_url: str | None = None
+    ) -> list[ADBCommand]:
         self._require_config()
-        return [
+        commands = [
             ADBCommand(
                 self._device_args(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
             ),
@@ -83,17 +88,35 @@ class ADBLauncher:
             ADBCommand(
                 self._device_args(["shell", "input", "keyevent", "KEYCODE_BACK"])
             ),
-            ADBCommand(self._watch_intent_args(url)),
+            ADBCommand(self._view_intent_args(HOME_URL)),
         ]
+        if details_url:
+            commands.append(ADBCommand(self._view_intent_args(details_url)))
+        commands.append(ADBCommand(self._view_intent_args(url)))
+        return commands
 
-    def launch(self, url: str) -> None:
+    def launch(self, url: str, details_url: str | None = None) -> None:
+        self.prepare()
+        self.start(url, details_url)
+
+    def prepare(self) -> None:
         self.check()
         self.ensure_plex()
         self.leave_player()
-        result = self.runner.run(self._watch_intent_args(url), timeout=30)
+        self._start_view(HOME_URL)
+        self._settle_route()
+
+    def start(self, url: str, details_url: str | None = None) -> None:
+        if details_url:
+            self._start_view(details_url)
+            self._settle_route()
+        self._start_view(url)
+        self._wait_for("playback", lambda: self.player_state() == "started")
+
+    def _start_view(self, url: str) -> None:
+        result = self.runner.run(self._view_intent_args(url), timeout=30)
         if result.returncode != 0:
             raise ADBError(result.stderr or result.stdout)
-        self._wait_for("playback", lambda: self.player_state() == "started")
 
     def ensure_plex(self) -> None:
         if self.plex_in_front():
@@ -153,6 +176,9 @@ class ADBLauncher:
                 )
             time.sleep(0.4)
 
+    def _settle_route(self) -> None:
+        time.sleep(self.settings.route_settle_ms / 1000)
+
     def _require_config(self) -> None:
         if not self.settings.adb_device:
             raise ADBError(
@@ -174,7 +200,7 @@ class ADBLauncher:
     def _device_args(self, args: list[str]) -> list[str]:
         return [self.settings.adb_bin, "-s", self.settings.adb_device or "", *args]
 
-    def _watch_intent_args(self, url: str) -> list[str]:
+    def _view_intent_args(self, url: str) -> list[str]:
         command = (
             "am start -a android.intent.action.VIEW -d "
             + shlex.quote(url)

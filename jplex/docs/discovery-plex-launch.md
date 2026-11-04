@@ -66,7 +66,7 @@ GET /library/metadata/{ratingKey}
 offset = int(viewOffset or 0) // 1000
 ```
 
-Then the same two steps: leave the current player, then open the watch link with that `offset`. An NFC tag can store the rating key and a mode (`restart` or `resume`). The handler looks up `viewOffset` at scan time so the tag does not go stale.
+For a real launch, leave the current player before reading this value. Back can flush newer progress to PMS, so reading first can build a stale resume URL. An NFC tag can store the rating key and a mode (`restart` or `resume`). The handler looks up `viewOffset` at launch time so the tag does not go stale.
 
 Earlier experiments wrote the inherited clock back onto James and Antz, so their saved `viewOffset` may be wrong until the next real watch.
 
@@ -75,9 +75,9 @@ Earlier experiments wrote the inherited clock back onto James and Antz, so their
 For each tag:
 
 1. Map the tag to a rating key and a mode, `restart` or `resume`.
-2. `GET /library/metadata/{ratingKey}`.
-3. `offset = 0` for restart, otherwise `int(viewOffset or 0) // 1000`.
-4. If `/status/sessions` shows this SHIELD `playing`, send Back and wait until that session is gone.
+2. If `/status/sessions` shows this SHIELD `playing`, send Back and wait until that session is gone.
+3. `GET /library/metadata/{ratingKey}`.
+4. `offset = 0` for restart, otherwise `int(viewOffset or 0) // 1000`.
 5. `am start` the watch link. Quote it.
 
 `jplex play` does these steps for movies, shows, and playlists. Movie resume reads the movie `viewOffset`; show resume reads On Deck. Movies and shows resume by default; playlists start at the first item unless shuffled.
@@ -101,6 +101,8 @@ A watch link sent while Plex has not yet connected to the server can stop on "se
 ```
 adb -s 192.168.1.126:5555 shell am start -n com.plexapp.android/tv.plex.app.MainActivity
 ```
+
+Some player error screens have no active audio state. Opening `https://watch.plex.tv/home` after leaving any audible player clears those stale player screens before the next watch link.
 
 `pmsUri(machineId, path)` is `server://{machineId}/com.plexapp.plugins.library` plus the library path. The route reads `uri`, `key`, `offset`, and `shuffle`. `offset` is `parseInt(offset, 10) * 1000` milliseconds. `shuffle` is on only when the query value is `1` or `true`. The player then `POST /playQueues` with that `uri`, the `key` as the starting item, and `shuffle` 0 or 1.
 
@@ -196,6 +198,25 @@ adb -s 192.168.1.126:5555 shell am start -n com.plexapp.android/tv.plex.app.Main
 ```
 
 `shuffle=true` is the other value the route accepts. `playbackLink` stringifies a boolean `true` into that. Other values are off.
+
+## Back returns to the item page
+
+`MainActivity` is reused for these links. A watch link starts the player on top of whatever Plex screen is already in the task, so Back reveals that older screen. To make Back useful after `jplex play`, seed the desired item page first. `jplex` waits `JPLEX_ROUTE_SETTLE_MS` between route intents; the default is 900 ms.
+
+1. Open Plex and leave any active player.
+2. Open `https://watch.plex.tv/home` to clear older details pages, then wait for the route to settle.
+3. Open the details link for the movie, or playlist, then wait again (skipped for tv shows)
+4. Open the existing watch link.
+
+The details link forms are:
+
+```
+https://watch.plex.tv/libraries/{machineId}/movie/item/{ratingKey}
+https://watch.plex.tv/libraries/{machineId}/show/item/{ratingKey}
+https://watch.plex.tv/libraries/{machineId}/playlist/{ratingKey}
+```
+
+For shows, `jplex` skips the details page and sends the watch link directly. Some show details pages start preview audio/video; a later watch link can be delivered to that active surface and ignore `offset`, which breaks Continue Watching. Do not use `?autoplay=1` on the details page for show resume: it starts from the show rating key, so it can ignore On Deck and play season 1 episode 1.
 
 ## Rejected
 
