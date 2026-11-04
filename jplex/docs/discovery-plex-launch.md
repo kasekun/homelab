@@ -66,7 +66,7 @@ GET /library/metadata/{ratingKey}
 offset = int(viewOffset or 0) // 1000
 ```
 
-Then the same two steps: leave the current player, then open the watch link with that `offset`. An NFC tag can store the rating key and a mode (`start` or `resume`). The handler looks up `viewOffset` at scan time so the tag does not go stale.
+Then the same two steps: leave the current player, then open the watch link with that `offset`. An NFC tag can store the rating key and a mode (`restart` or `resume`). The handler looks up `viewOffset` at scan time so the tag does not go stale.
 
 Earlier experiments wrote the inherited clock back onto James and Antz, so their saved `viewOffset` may be wrong until the next real watch.
 
@@ -74,13 +74,13 @@ Earlier experiments wrote the inherited clock back onto James and Antz, so their
 
 For each tag:
 
-1. Map the tag to a rating key and a mode, `start` or `resume`.
+1. Map the tag to a rating key and a mode, `restart` or `resume`.
 2. `GET /library/metadata/{ratingKey}`.
-3. `offset = 0` for start, otherwise `int(viewOffset or 0) // 1000`.
+3. `offset = 0` for restart, otherwise `int(viewOffset or 0) // 1000`.
 4. If `/status/sessions` shows this SHIELD `playing`, send Back and wait until that session is gone.
 5. `am start` the watch link. Quote it.
 
-`jplex play` does these steps for movies, shows, and playlists. Movie resume reads the movie `viewOffset`; show resume reads On Deck; show next reads the first unwatched leaf.
+`jplex play` does these steps for movies, shows, and playlists. Movie resume reads the movie `viewOffset`; show resume reads On Deck. Movies and shows resume by default; playlists start at the first item unless shuffled.
 
 ADB over the network is enough for a first automation. Home Assistant can send the same Back and `am start` once the SHIELD is paired. The link itself does not need Home Assistant.
 
@@ -113,7 +113,7 @@ export MACHINE_ID="<plex-server-id>"
 adb -s 192.168.1.126:5555 shell "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=server%3A%2F%2F${MACHINE_ID}%2Fcom.plexapp.plugins.library%2Flibrary%2Fmetadata%2F39010&offset=0' -n com.plexapp.android/tv.plex.app.MainActivity"
 ```
 
-### Next unwatched episode
+### Removed next-unwatched experiment
 
 The show URI does not do this. It restarts at the first episode.
 
@@ -121,7 +121,7 @@ Unwatched means no `viewCount`. `GET /library/metadata/{showRatingKey}/allLeaves
 
 Play that episode with the show URI and `key` set to the episode path, `offset=0`. `key` is the play-queue start item. `playlistPlaybackLink` appends the same `&key=`. This played Ebony Sunset at 0.
 
-`jplex` currently uses the episode URI directly for `next`, because the later episode-URI experiment also worked and keeps show `next` aligned with show `resume`, where the episode URI is required for the offset to apply.
+`jplex` no longer exposes this as `--mode next`; default show playback follows Plex's Play action by using On Deck instead.
 
 ```
 export MACHINE_ID="<plex-server-id>"
@@ -146,6 +146,36 @@ adb -s 192.168.1.126:5555 shell "am start -a android.intent.action.VIEW -d 'http
 ```
 
 The in-app Play action (`pmsWatchAction`) is this case when `viewOffset` is set, and the next-episode case when it is not: the target is `OnDeck.Metadata.key`, and the offset is `floor(viewOffset / 1000)` only when `viewOffset` is present. `pmsWatchFromStartAction` is the Restart action. On a show it plays the show key at offset 0, which is the first episode.
+
+`jplex play` and `jplex plan` use that Play action by default for movies and shows. `--from-start` (`--mode restart`) is Restart. `--shuffle` (`--mode shuffle`) is the shuffle link above.
+
+## When Plex calls it finished
+
+Play does not decide that an item is finished. PMS does, while the player reports `/:/timeline`, and Play only reads the result.
+
+On this server, `GET /:/prefs`:
+
+| Setting | Value | Meaning |
+| --- | --- | --- |
+| `LibraryVideoPlayedThreshold` | `90` | Mark played at this percent of `duration` when no earlier rule applies. Choices are 70, 75, 80, 85, 90, 95. |
+| `LibraryVideoPlayedAtBehaviour` | `3` | `0` threshold only. `1` final credits marker. `2` first credits marker. `3` earliest of the threshold and the first credits marker. `3` is the default. |
+| `GenerateCreditsMarkerBehavior` | `asap` | Credits markers are detected. |
+| `OnDeckWindow` | `16` weeks | Continue Watching drops media not watched in this long. |
+
+A credits marker is a `Marker` on `GET /library/metadata/{ratingKey}?includeMarkers=1` with `type="credits"` and `startTimeOffset` in milliseconds. `final="1"` is the last credits block, not the one behaviour `3` uses. Behaviour `3` uses the earliest `startTimeOffset`.
+
+James and the Giant Peach `49423`, duration `4761840`:
+
+- 90% is `4285656` ms.
+- First credits marker starts at `4381657` ms (92%). A second, `final="1"`, starts at `4751657`.
+- Played position is `min(4285656, 4381657) = 4285656`. The credits are after the threshold, so the threshold wins.
+- If the first credits marker started at 82%, played position would be that marker instead, and the credits would not count as unfinished.
+
+Crossing that position clears `viewOffset`, increments `viewCount`, and moves the show's On Deck to the next episode. Checked against the live library: the only item within 15% of its end was Tarzan `33312` at `4763493 / 5311339` (89.7%). Its played position is `4780205` (90%; credits start later, at `4944205`), so it is still On Deck. Nothing in Continue Watching or the movie libraries was stored past its played position.
+
+On Deck is the show's resume point, not "any episode with a `viewOffset`". The Joy of Painting `39818` has S1E2 Mt. McKinley `39821` at `viewCount=2` and `viewOffset=107903`, and On Deck is S1E3 Ebony Sunset `39822` at `viewOffset=112861`. Show resume follows Ebony Sunset. A movie has no On Deck child; its own `viewOffset` is the resume point, including a rewatch (`viewCount` set and `viewOffset` still set, as with Dune `36472`).
+
+`jplex` does not recompute the 90% or credits rule. Resume reads the `viewOffset` and On Deck that PMS has already updated. That is how Play skips the credits.
 
 ### Random episode
 

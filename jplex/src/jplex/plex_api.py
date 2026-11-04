@@ -117,12 +117,6 @@ class PlexClient:
         root = self.get_xml(f"/library/metadata/{show_rating_key}", includeOnDeck=1)
         return self._first_media(root.findall("./Directory/OnDeck/Video"))
 
-    def first_unwatched(self, show_rating_key: int) -> PlexMedia | None:
-        root = self.get_xml(
-            f"/library/metadata/{show_rating_key}/allLeaves", unwatched=1
-        )
-        return self._first_media(root.iter("Video"))
-
     def _first_media(
         self, nodes: ET.Element | Iterable[ET.Element]
     ) -> PlexMedia | None:

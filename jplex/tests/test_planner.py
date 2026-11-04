@@ -14,7 +14,6 @@ class FakePlex:
         self.on_deck_episode = PlexMedia(
             21, "Episode Two", "episode", view_offset_ms=92000
         )
-        self.unwatched = PlexMedia(22, "Episode Three", "episode")
 
     def metadata(self, rating_key: int) -> PlexMedia:
         assert rating_key == self.movie_key
@@ -23,10 +22,6 @@ class FakePlex:
     def on_deck(self, show_rating_key: int) -> PlexMedia:
         assert show_rating_key == self.show_key
         return self.on_deck_episode
-
-    def first_unwatched(self, show_rating_key: int) -> PlexMedia:
-        assert show_rating_key == self.show_key
-        return self.unwatched
 
 
 def item(rating_key: int, kind: str, title: str = "Title") -> CatalogItem:
@@ -71,13 +66,6 @@ def test_show_resume_uses_on_deck_episode_uri_not_show_key() -> None:
     assert plan.key is None
     assert plan.offset == 92
     assert plan.target_rating_key == 21
-
-
-def test_show_next_uses_first_unwatched_episode() -> None:
-    plan = plan_playback(item(10, "show", "Show"), "next", FakePlex(), "machine")
-
-    assert plan.uri.endswith("/library/metadata/22")
-    assert plan.offset == 0
 
 
 def test_playlist_uri_comes_from_rating_key_not_api_key() -> None:

@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 
 ItemType = Literal["movie", "show", "playlist"]
-PlayMode = Literal["start", "resume", "next", "shuffle"]
+PlayMode = Literal["restart", "resume", "shuffle"]
 
 
 @dataclass(frozen=True)

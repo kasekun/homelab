@@ -37,7 +37,7 @@ def plan_playback(
 def _movie_plan(
     item: CatalogItem, mode: PlayMode, client: PlexClient | None
 ) -> PlaybackPlan:
-    if mode not in {"start", "resume"}:
+    if mode not in {"restart", "resume"}:
         raise PlanningError(f"A movie has no {mode} mode.")
     offset = 0
     if mode == "resume":
@@ -51,29 +51,24 @@ def _movie_plan(
 def _show_plan(
     item: CatalogItem, mode: PlayMode, client: PlexClient | None, machine_id: str
 ) -> PlaybackPlan:
-    if mode == "start":
+    if mode == "restart":
         return _plan(item, mode, item.uri)
     if mode == "shuffle":
         return _plan(item, mode, item.uri, shuffle=True)
-    if client is None:
-        raise PlanningError(f"Show {mode} requires Plex API access.")
     if mode == "resume":
+        if client is None:
+            raise PlanningError("Show resume requires Plex API access.")
         episode = client.on_deck(item.rating_key)
         if episode is None:
             return _plan(item, mode, item.uri)
         return _episode_plan(
             item, mode, episode, machine_id, episode.view_offset_ms // 1000
         )
-    if mode == "next":
-        episode = client.first_unwatched(item.rating_key)
-        if episode is None:
-            return _plan(item, mode, item.uri)
-        return _episode_plan(item, mode, episode, machine_id, 0)
     raise PlanningError(f"A show has no {mode} mode.")
 
 
 def _playlist_plan(item: CatalogItem, mode: PlayMode) -> PlaybackPlan:
-    if mode not in {"start", "shuffle"}:
+    if mode not in {"restart", "shuffle"}:
         raise PlanningError(f"A playlist has no {mode} mode.")
     return _plan(item, mode, item.uri, shuffle=mode == "shuffle")
 

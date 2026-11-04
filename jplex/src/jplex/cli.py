@@ -14,7 +14,6 @@ from .planner import PlanningError, plan_playback
 from .plex_api import PlexAPIError, PlexClient
 from .search import SelectionError, search_catalog, select_item
 
-
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
@@ -111,10 +110,11 @@ def key(
 @click.option("--year", type=int)
 @click.option(
     "--mode",
-    type=click.Choice(["start", "resume", "next", "shuffle"]),
-    default="start",
-    show_default=True,
+    type=click.Choice(["restart", "resume", "shuffle"]),
+    help="Default: resume movies/shows, restart playlists.",
 )
+@click.option("--from-start", is_flag=True, help="Alias for --mode restart.")
+@click.option("--shuffle", is_flag=True, help="Alias for --mode shuffle.")
 @click.option("--json", "as_json", is_flag=True)
 @click.pass_context
 def plan_cmd(
@@ -122,12 +122,15 @@ def plan_cmd(
     target: str,
     item_type: ItemType | None,
     year: int | None,
-    mode: PlayMode,
+    mode: PlayMode | None,
+    from_start: bool,
+    shuffle: bool,
     as_json: bool,
 ) -> None:
     """Build the Plex watch URL for a target without launching it."""
     catalog = get_catalog(ctx)
     item = resolve_or_exit(catalog, target, item_type, year, 10)
+    mode = requested_mode(mode, from_start, shuffle)
     plan = build_plan_or_exit(ctx, catalog, item, mode)
     if as_json:
         click.echo(json.dumps(plan.to_json(), indent=2))
@@ -149,10 +152,11 @@ def plan_cmd(
 @click.option("--year", type=int)
 @click.option(
     "--mode",
-    type=click.Choice(["start", "resume", "next", "shuffle"]),
-    default="start",
-    show_default=True,
+    type=click.Choice(["restart", "resume", "shuffle"]),
+    help="Default: resume movies/shows, restart playlists.",
 )
+@click.option("--from-start", is_flag=True, help="Alias for --mode restart.")
+@click.option("--shuffle", is_flag=True, help="Alias for --mode shuffle.")
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
 def play(
@@ -160,12 +164,15 @@ def play(
     target: str,
     item_type: ItemType | None,
     year: int | None,
-    mode: PlayMode,
+    mode: PlayMode | None,
+    from_start: bool,
+    shuffle: bool,
     dry_run: bool,
 ) -> None:
     """Plan and launch playback on the configured SHIELD."""
     catalog = get_catalog(ctx)
     item = resolve_or_exit(catalog, target, item_type, year, 10)
+    mode = requested_mode(mode, from_start, shuffle)
     plan = build_plan_or_exit(ctx, catalog, item, mode)
     launcher = ADBLauncher(current_settings(ctx))
     if dry_run:
@@ -254,12 +261,38 @@ def resolve_or_exit(
         raise click.ClickException(str(error)) from error
 
 
-def build_plan_or_exit(ctx: click.Context, catalog: Catalog, item: Any, mode: PlayMode):
+def effective_mode(item: Any, mode: PlayMode | None) -> PlayMode:
+    if mode is not None:
+        return mode
+    return "restart" if item.type == "playlist" else "resume"
+
+
+def requested_mode(
+    mode: PlayMode | None, from_start: bool, shuffle: bool
+) -> PlayMode | None:
+    modes: list[PlayMode] = []
+    if mode is not None:
+        modes.append(mode)
+    if from_start:
+        modes.append("restart")
+    if shuffle:
+        modes.append("shuffle")
+    if len(modes) > 1:
+        raise click.ClickException(
+            "--mode, --from-start, and --shuffle are mutually exclusive."
+        )
+    return modes[0] if modes else None
+
+
+def build_plan_or_exit(
+    ctx: click.Context, catalog: Catalog, item: Any, mode: PlayMode | None
+):
     settings = current_settings(ctx)
-    needs_api = mode in {"resume", "next"}
+    plan_mode = effective_mode(item, mode)
+    needs_api = plan_mode == "resume"
     client = make_client(settings) if needs_api else None
     try:
-        return plan_playback(item, mode, client, catalog.machine_id)
+        return plan_playback(item, plan_mode, client, catalog.machine_id)
     except (PlanningError, PlexAPIError) as error:
         raise click.ClickException(str(error)) from error
 

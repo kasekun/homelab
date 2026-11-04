@@ -46,11 +46,14 @@ uv run jplex adb check
 uv run jplex cache refresh
 uv run jplex search "doom"
 uv run jplex key "Futurama" --type playlist --limit 1
-uv run jplex plan 49444 --mode shuffle --json
-uv run jplex play 49444 --mode shuffle --dry-run
+uv run jplex plan 49444 --shuffle --json
+uv run jplex play 49444 --shuffle --dry-run
+uv run jplex play "dune" --from-start # will search for and play dune from start of film
 ```
 
 `TARGET` can be a rating key or a search query. Query-based commands only auto-select exact matches or a single confident prefix match; fuzzy matches print candidates and fail.
+
+Omitting `--mode` resumes movies and shows, and starts playlists at the first item. Use `--from-start` for `--mode restart`, or `--shuffle` for `--mode shuffle`; mode selectors are mutually exclusive.
 
 ## Tests
 
