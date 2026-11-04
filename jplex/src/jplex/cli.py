@@ -33,6 +33,11 @@ def settings_options(command: Any) -> Any:
         click.option(
             "--cache-path", type=click.Path(path_type=Path), help="Catalog cache path."
         ),
+        click.option(
+            "--launch-timeout-seconds",
+            type=float,
+            help="Seconds to wait for SHIELD launch steps.",
+        ),
         click.option("--adb-bin", help="ADB executable path."),
         click.option("--adb-device", help="ADB serial or host[:port]."),
         click.option(

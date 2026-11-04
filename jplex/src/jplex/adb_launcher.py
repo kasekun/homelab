@@ -38,11 +38,16 @@ class ADBCommand:
 
 class ADBLauncher:
     def __init__(
-        self, settings: Settings, runner: Runner | None = None, step_timeout: float = 8
+        self,
+        settings: Settings,
+        runner: Runner | None = None,
+        step_timeout: float | None = None,
     ) -> None:
         self.settings = settings
         self.runner = runner or SubprocessRunner()
-        self.step_timeout = step_timeout
+        self.step_timeout = (
+            settings.launch_timeout_seconds if step_timeout is None else step_timeout
+        )
 
     def check(self) -> str:
         self._require_config()

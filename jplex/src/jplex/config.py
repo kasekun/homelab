@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     adb_device: str | None = None
     shield_package: str = "com.plexapp.android"
     shield_activity: str = "com.plexapp.android/tv.plex.app.MainActivity"
+    launch_timeout_seconds: float = Field(default=12, gt=0)
     cache_path: Path = Field(default_factory=default_cache_path)
 
     @field_validator("plex_url")
