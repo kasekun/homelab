@@ -11,10 +11,7 @@ class PlanningError(RuntimeError):
     pass
 
 
-def details_url(machine_id: str, item: CatalogItem) -> str | None:
-    if item.type == "show":
-        # Show details can start preview playback, causing the watch link to ignore offset.
-        return None
+def details_url(machine_id: str, item: CatalogItem) -> str:
     if item.type == "playlist":
         path = f"playlist/{item.rating_key}"
     else:

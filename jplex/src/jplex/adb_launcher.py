@@ -16,6 +16,42 @@ class ADBError(RuntimeError):
 
 
 HOME_URL = "https://watch.plex.tv/home"
+# ponytail: show theme music was audible by 1.5s. A slower server can start later and still steal offset.
+PREVIEW_GRACE_SECONDS = 1.8
+AUDIO_MARK = "##JPLEX##"
+
+
+def audio_probe_script(package: str) -> str:
+    quoted = shlex.quote(package)
+    return (
+        f"printf '%s\\n' \"$(pidof {quoted})\"; "
+        f"printf '%s\\n' '{AUDIO_MARK}'; "
+        "dumpsys audio"
+    )
+
+
+def parse_player_probe(output: str) -> str | None:
+    text = output.replace("\r\n", "\n").replace("\r", "\n")
+    pid_part, sep, audio = text.partition(f"\n{AUDIO_MARK}\n")
+    if not sep:
+        return None
+    pids = pid_part.split()
+    if not pids:
+        return None
+    needle = f"/{pids[0]} "
+    found = None
+    for line in audio.splitlines():
+        if (
+            "AudioPlaybackConfiguration" not in line
+            or "AudioTrack" not in line
+            or needle not in line
+        ):
+            continue
+        if "state:started" in line:
+            return "started"
+        if "state:paused" in line:
+            found = "paused"
+    return found
 
 
 class Runner(Protocol):
@@ -109,9 +145,23 @@ class ADBLauncher:
     def start(self, url: str, details_url: str | None = None) -> None:
         if details_url:
             self._start_view(details_url)
-            self._settle_route()
+            self._release_details_preview(details_url)
         self._start_view(url)
         self._wait_for("playback", lambda: self.player_state() == "started")
+
+    def _release_details_preview(self, details_url: str) -> None:
+        deadline = time.monotonic() + PREVIEW_GRACE_SECONDS
+        while self.player_state() is None:
+            if time.monotonic() >= deadline:
+                return
+            time.sleep(0.1)
+        # Theme music is owned by the details screen, and Back from that screen
+        # pops it. A second copy leaves the first page underneath, so one Back
+        # drops the preview and stays on the item.
+        self._start_view(details_url)
+        self._settle_route()
+        self._device_adb(["shell", "input", "keyevent", "KEYCODE_BACK"])
+        self._wait_for("preview to stop", lambda: self.player_state() is None)
 
     def _start_view(self, url: str) -> None:
         result = self.runner.run(self._view_intent_args(url), timeout=30)
@@ -145,25 +195,8 @@ class ADBLauncher:
         )
 
     def player_state(self) -> str | None:
-        pid = self._device_adb(
-            ["shell", "pidof", self.settings.shield_package]
-        ).stdout.split()
-        if not pid:
-            return None
-        needle = f"/{pid[0]} "
-        found = None
-        for line in self._device_adb(["shell", "dumpsys", "audio"]).stdout.splitlines():
-            if (
-                "AudioPlaybackConfiguration" not in line
-                or "AudioTrack" not in line
-                or needle not in line
-            ):
-                continue
-            if "state:started" in line:
-                return "started"
-            if "state:paused" in line:
-                found = "paused"
-        return found
+        script = audio_probe_script(self.settings.shield_package)
+        return parse_player_probe(self._device_adb(["shell", script]).stdout)
 
     def _wait_for(self, label: str, ready: Callable[[], bool]) -> None:
         deadline = time.monotonic() + self.step_timeout
