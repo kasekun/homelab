@@ -9,7 +9,7 @@ It keeps Plex API/catalog/search/planning logic testable and isolates ADB calls 
 - A Plex server reachable from the machine running `jplex`.
 - A Plex token with access to that server (see instructions below)
 - An NVIDIA SHIELD TV with Plex installed (other Android TV devices may work, but are untested)
-- `adb` installed on the machine running `jplex`, or `JPLEX_ADB_BIN` set to the `adb` executable.
+- `adb` installed on the machine running `jplex`, or `JPLEX__ADB_BIN` set to the `adb` executable.
 - Network access from the local machine to the SHIELD's ADB endpoint, usually `<shield-ip>:5555`.
 - Android Developer Options enabled on the SHIELD.
 - Network debugging enabled on the SHIELD.
@@ -26,11 +26,12 @@ cp .env-example .env
 Fill in `.env`:
 
 ```dotenv
-JPLEX_PLEX_URL="http://127.0.0.1:32400"
-JPLEX_PLEX_TOKEN=""
-JPLEX_ADB_DEVICE="192.168.1.126:5555"
-# JPLEX_ADB_BIN="adb"
-# JPLEX_ROUTE_SETTLE_MS=900
+JPLEX__PLEX_URL="http://127.0.0.1:32400"
+JPLEX__PLEX_TOKEN=""
+JPLEX__ADB_DEVICE_ADDRESS="192.168.1.126:5555"
+# JPLEX__ADB_BIN="adb"
+JPLEX__ROUTE_SETTLE_MS=900
+JPLEX__SHOW__AUDIO_PREVIEW_GRACE_MS=1800
 ```
 
 To get your `PLEX_TOKEN`
@@ -55,6 +56,24 @@ uv run jplex play "dune" --from-start # will search for and play dune from start
 `TARGET` can be a rating key or a search query. Query-based commands only auto-select exact matches or a single confident prefix match; fuzzy matches print candidates and fail.
 
 Omitting `--mode` resumes movies and shows, and starts playlists at the first item. Use `--from-start` for `--mode restart`, or `--shuffle` for `--mode shuffle`; mode selectors are mutually exclusive.
+
+## Mechanism
+
+when issuing a `jplex play` the process is as follows:
+
+1. Launch plex if it is closed / not foreground
+2. Navigate to home (leaving any details page or playing media)
+3. Navigate to the details page for your chosen media
+4. Launch chosen media
+
+## Configuration
+
+  - `JPLEX__SHOW__AUDIO_PREVIEW_GRACE_MS` dictates the time jplex will allow for the audio preview on tv show details page to play (step 3 above). Jplex waits for this to play, cancels it, before issuing the launch media command (without the cancel, "resume" timestamp doesn't work).
+
+  - `JPLEX__ROUTE_SETTLE_MS` The amount of time between jplex steps
+
+  - `JPLEX__PLEX_URL` set to `http://127.0.0.1:32400` if running jplex from the same machine as your plex server, otherwise set to `http://<plex server ip>:32400`
+
 
 ## Tests
 

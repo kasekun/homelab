@@ -40,7 +40,7 @@ def settings_options(command: Any) -> Any:
         click.option("--adb-bin", help="ADB executable path."),
         click.option("--adb-device", help="ADB serial or host[:port]."),
         click.option(
-            "--token", "plex_token", help="Plex token. Prefer JPLEX_PLEX_TOKEN."
+            "--token", "plex_token", help="Plex token. Prefer JPLEX__PLEX_TOKEN."
         ),
         click.option("--plex-url", help="Plex server URL."),
     ]
@@ -190,10 +190,19 @@ def play(
             click.echo(command.display())
         return
     try:
+        release_details_preview = plan.item.type == "show"
         if prepared:
-            launcher.start(plan.url, plan.details_url)
+            launcher.start(
+                plan.url,
+                plan.details_url,
+                release_details_preview=release_details_preview,
+            )
         else:
-            launcher.launch(plan.url, plan.details_url)
+            launcher.launch(
+                plan.url,
+                plan.details_url,
+                release_details_preview=release_details_preview,
+            )
     except ADBError as error:
         raise click.ClickException(str(error)) from error
 

@@ -67,7 +67,7 @@ def test_show_resume_uses_on_deck_episode_uri_not_show_key() -> None:
     assert plan.key is None
     assert plan.offset == 92
     assert plan.target_rating_key == 21
-    assert plan.details_url is None
+    assert plan.details_url == "https://watch.plex.tv/libraries/machine/show/item/10"
 
 
 def test_playlist_uri_comes_from_rating_key_not_api_key() -> None:

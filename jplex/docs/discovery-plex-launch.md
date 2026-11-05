@@ -201,12 +201,13 @@ adb -s 192.168.1.126:5555 shell am start -n com.plexapp.android/tv.plex.app.Main
 
 ## Back returns to the item page
 
-`MainActivity` is reused for these links. A watch link starts the player on top of whatever Plex screen is already in the task, so Back reveals that older screen. To make Back useful after `jplex play`, seed the desired item page first. `jplex` waits `JPLEX_ROUTE_SETTLE_MS` between route intents; the default is 900 ms.
+`MainActivity` is reused for these links. A watch link starts the player on top of whatever Plex screen is already in the task, so Back reveals that older screen. To make Back useful after `jplex play`, seed the desired item page first. `jplex` waits `JPLEX__ROUTE_SETTLE_MS` between route intents; the default is 900 ms.
 
 1. Open Plex and leave any active player.
 2. Open `https://watch.plex.tv/home` to clear older details pages, then wait for the route to settle.
-3. Open the details link for the movie, or playlist, then wait again (skipped for tv shows)
-4. Open the existing watch link.
+3. Open the details link for the movie, show, or playlist.
+4. If that page starts preview audio, open the same details link again and press Back once. The first page stays up and the preview player is gone.
+5. Open the existing watch link.
 
 The details link forms are:
 
@@ -216,7 +217,7 @@ https://watch.plex.tv/libraries/{machineId}/show/item/{ratingKey}
 https://watch.plex.tv/libraries/{machineId}/playlist/{ratingKey}
 ```
 
-For shows, `jplex` skips the details page and sends the watch link directly. Some show details pages start preview audio/video; a later watch link can be delivered to that active surface and ignore `offset`, which breaks Continue Watching. Do not use `?autoplay=1` on the details page for show resume: it starts from the show rating key, so it can ignore On Deck and play season 1 episode 1.
+Show details can start theme music when that Plex setting is on. A watch link sent while that player is active keeps the theme clock and drops `offset`. Opening the details link a second time and pressing Back once stops the preview without leaving the page. `jplex` does this only after preview audio actually starts. Do not use `?autoplay=1` on the details page for show resume: it starts from the show rating key, so it can ignore On Deck and play season 1 episode 1.
 
 ## Rejected
 

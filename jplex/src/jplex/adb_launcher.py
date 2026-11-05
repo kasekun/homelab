@@ -16,6 +16,40 @@ class ADBError(RuntimeError):
 
 
 HOME_URL = "https://watch.plex.tv/home"
+AUDIO_MARK = "##JPLEX##"
+
+
+def audio_probe_script(package: str) -> str:
+    quoted = shlex.quote(package)
+    return (
+        f"printf '%s\\n' \"$(pidof {quoted})\"; "
+        f"printf '%s\\n' '{AUDIO_MARK}'; "
+        "dumpsys audio"
+    )
+
+
+def parse_player_probe(output: str) -> str | None:
+    text = output.replace("\r\n", "\n").replace("\r", "\n")
+    pid_part, sep, audio = text.partition(f"\n{AUDIO_MARK}\n")
+    if not sep:
+        return None
+    pids = pid_part.split()
+    if not pids:
+        return None
+    needle = f"/{pids[0]} "
+    found = None
+    for line in audio.splitlines():
+        if (
+            "AudioPlaybackConfiguration" not in line
+            or "AudioTrack" not in line
+            or needle not in line
+        ):
+            continue
+        if "state:started" in line:
+            return "started"
+        if "state:paused" in line:
+            found = "paused"
+    return found
 
 
 class Runner(Protocol):
@@ -28,7 +62,9 @@ class SubprocessRunner:
     def run(
         self, args: list[str], timeout: int = 30
     ) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        return subprocess.run(
+            args, check=False, capture_output=True, text=True, timeout=timeout
+        )
 
 
 @dataclass(frozen=True)
@@ -95,9 +131,15 @@ class ADBLauncher:
         commands.append(ADBCommand(self._view_intent_args(url)))
         return commands
 
-    def launch(self, url: str, details_url: str | None = None) -> None:
+    def launch(
+        self,
+        url: str,
+        details_url: str | None = None,
+        *,
+        release_details_preview: bool = False,
+    ) -> None:
         self.prepare()
-        self.start(url, details_url)
+        self.start(url, details_url, release_details_preview=release_details_preview)
 
     def prepare(self) -> None:
         self.check()
@@ -106,12 +148,37 @@ class ADBLauncher:
         self._start_view(HOME_URL)
         self._settle_route()
 
-    def start(self, url: str, details_url: str | None = None) -> None:
+    def start(
+        self,
+        url: str,
+        details_url: str | None = None,
+        *,
+        release_details_preview: bool = False,
+    ) -> None:
         if details_url:
             self._start_view(details_url)
-            self._settle_route()
+            if release_details_preview:
+                self._release_details_preview(details_url)
+            else:
+                self._settle_route()
         self._start_view(url)
         self._wait_for("playback", lambda: self.player_state() == "started")
+
+    def _release_details_preview(self, details_url: str) -> None:
+        settle_seconds = self.settings.route_settle_ms / 1000
+        preview_grace_seconds = self.settings.show_audio_preview_grace_ms / 1000
+        deadline = time.monotonic() + max(preview_grace_seconds, settle_seconds)
+        while self.player_state() != "started":
+            if time.monotonic() >= deadline:
+                return
+            time.sleep(0.1)
+        # Theme music is owned by the details screen, and Back from that screen
+        # pops it. A second copy leaves the first page underneath, so one Back
+        # drops the preview and stays on the item.
+        self._start_view(details_url)
+        self._settle_route()
+        self._device_adb(["shell", "input", "keyevent", "KEYCODE_BACK"])
+        self._wait_for("preview to stop", lambda: self.player_state() is None)
 
     def _start_view(self, url: str) -> None:
         result = self.runner.run(self._view_intent_args(url), timeout=30)
@@ -145,25 +212,8 @@ class ADBLauncher:
         )
 
     def player_state(self) -> str | None:
-        pid = self._device_adb(
-            ["shell", "pidof", self.settings.shield_package]
-        ).stdout.split()
-        if not pid:
-            return None
-        needle = f"/{pid[0]} "
-        found = None
-        for line in self._device_adb(["shell", "dumpsys", "audio"]).stdout.splitlines():
-            if (
-                "AudioPlaybackConfiguration" not in line
-                or "AudioTrack" not in line
-                or needle not in line
-            ):
-                continue
-            if "state:started" in line:
-                return "started"
-            if "state:paused" in line:
-                found = "paused"
-        return found
+        script = audio_probe_script(self.settings.shield_package)
+        return parse_player_probe(self._device_adb(["shell", script]).stdout)
 
     def _wait_for(self, label: str, ready: Callable[[], bool]) -> None:
         deadline = time.monotonic() + self.step_timeout
@@ -182,13 +232,13 @@ class ADBLauncher:
     def _require_config(self) -> None:
         if not self.settings.adb_device:
             raise ADBError(
-                "JPLEX_ADB_DEVICE is not set. Use a serial like 192.168.1.126:5555."
+                "JPLEX__ADB_DEVICE_ADDRESS is not set. Use a serial like 192.168.1.126:5555."
             )
 
     def _require_adb(self) -> None:
         if shutil.which(self.settings.adb_bin) is None:
             raise ADBError(
-                "adb was not found. Install Android platform tools or set JPLEX_ADB_BIN."
+                "adb was not found. Install Android platform tools or set JPLEX__ADB_BIN."
             )
 
     def _adb(self, args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -220,7 +270,7 @@ class ADBLauncher:
         if "refused" in message or "timed out" in message:
             return (
                 "ADB could not connect. Enable SHIELD Developer Options -> Network debugging "
-                "and check JPLEX_ADB_DEVICE.\n\n"
+                "and check JPLEX__ADB_DEVICE_ADDRESS.\n\n"
                 f"adb devices -l:\n{devices}"
             )
         if "authenticate" in message.lower() or "unauthorized" in message.lower():

@@ -72,8 +72,14 @@ def test_play_prepares_before_planning_resume(monkeypatch) -> None:
         def prepare(self) -> None:
             events.append("prepare")
 
-        def start(self, url: str, details_url: str | None = None) -> None:
-            events.append("start")
+        def start(
+            self,
+            url: str,
+            details_url: str | None = None,
+            *,
+            release_details_preview: bool = False,
+        ) -> None:
+            events.append(f"start:{release_details_preview}")
 
     def build_plan(*args, **kwargs):
         events.append("plan")
@@ -87,4 +93,4 @@ def test_play_prepares_before_planning_resume(monkeypatch) -> None:
     result = CliRunner().invoke(cli.main, ["play", "show"])
 
     assert result.exit_code == 0
-    assert events == ["prepare", "plan", "start"]
+    assert events == ["prepare", "plan", "start:True"]

@@ -4,9 +4,14 @@ import subprocess
 
 import pytest
 
-from jplex.adb_launcher import ADBError, ADBLauncher
+from jplex.adb_launcher import (
+    AUDIO_MARK,
+    ADBError,
+    ADBLauncher,
+    audio_probe_script,
+    parse_player_probe,
+)
 from jplex.config import load_settings
-
 
 Output = subprocess.CompletedProcess[str] | list[subprocess.CompletedProcess[str]]
 
@@ -37,8 +42,39 @@ def completed(
     return subprocess.CompletedProcess(args, returncode, stdout, stderr)
 
 
-def settings():
-    return load_settings(adb_bin="adb", adb_device="192.168.1.126")
+def settings(**overrides: object):
+    return load_settings(adb_bin="adb", adb_device="192.168.1.126", **overrides)
+
+
+def probe(pid: str = "", audio: str = "") -> str:
+    return f"{pid}\n{AUDIO_MARK}\n{audio}"
+
+
+PROBE = (
+    "adb",
+    "-s",
+    "192.168.1.126:5555",
+    "shell",
+    audio_probe_script("com.plexapp.android"),
+)
+STARTED = "AudioPlaybackConfiguration player type:AudioTrack /123 state:started\n"
+
+
+def test_parse_player_probe_splits_pid_from_audio() -> None:
+    started = "AudioPlaybackConfiguration player type:AudioTrack /123 state:started\n"
+    paused = "AudioPlaybackConfiguration player type:AudioTrack /123 state:paused\n"
+    other = "AudioPlaybackConfiguration player type:AudioTrack /999 state:started\n"
+
+    assert parse_player_probe(probe("123", started)) == "started"
+    assert parse_player_probe(probe("123 456", paused)) == "paused"
+    assert parse_player_probe(probe("", started)) is None
+    assert parse_player_probe(probe("123", other)) is None
+    assert parse_player_probe(started) is None
+    assert parse_player_probe(probe("123", started).replace("\n", "\r\n")) == "started"
+    assert (
+        parse_player_probe(f"123\nstate:started /123\n{AUDIO_MARK}\n{paused}")
+        == "paused"
+    )
 
 
 def test_dry_run_contains_safe_adb_launch_command() -> None:
@@ -237,34 +273,12 @@ def test_launch_leaves_active_player_before_watch_intent(
                 [],
                 "mCurrentFocus=Window{abc u0 com.plexapp.android/tv.plex.app.MainActivity}\n",
             ),
-            (
-                "adb",
-                "-s",
-                "192.168.1.126:5555",
-                "shell",
-                "pidof",
-                "com.plexapp.android",
-            ): [
-                completed([], "123\n"),
-                completed([], ""),
-                completed([], "123\n"),
-            ],
-            (
-                "adb",
-                "-s",
-                "192.168.1.126:5555",
-                "shell",
-                "dumpsys",
-                "audio",
-            ): [
-                completed(
-                    [],
-                    "AudioPlaybackConfiguration player type:AudioTrack /123 state:started\n",
-                ),
-                completed(
-                    [],
-                    "AudioPlaybackConfiguration player type:AudioTrack /123 state:started\n",
-                ),
+            PROBE: [
+                completed([], probe("123", STARTED)),
+                completed([], probe()),
+                completed([], probe("123", STARTED)),
+                completed([], probe()),
+                completed([], probe("123", STARTED)),
             ],
             tuple(back): completed([]),
             tuple(watch): completed([]),
@@ -274,15 +288,122 @@ def test_launch_leaves_active_player_before_watch_intent(
     )
 
     ADBLauncher(settings(), fake).launch(
-        url, "https://watch.plex.tv/libraries/m/show/item/10"
+        url,
+        "https://watch.plex.tv/libraries/m/show/item/10",
+        release_details_preview=True,
     )
 
-    assert (
-        fake.calls.index(back)
-        < fake.calls.index(home)
-        < fake.calls.index(details)
-        < fake.calls.index(watch)
+    details_at = [i for i, call in enumerate(fake.calls) if call == details]
+    backs = [i for i, call in enumerate(fake.calls) if call == back]
+    assert len(details_at) == 2
+    assert backs[0] < fake.calls.index(home) < details_at[0]
+    assert details_at[0] < details_at[1] < backs[1] < fake.calls.index(watch)
+
+
+def test_start_settles_non_show_details_without_preview_probe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sleeps: list[float] = []
+    monkeypatch.setattr("jplex.adb_launcher.time.sleep", sleeps.append)
+    launcher_settings = settings()
+    url = "https://watch.plex.tv/watch/video?uri=x&offset=15"
+    details_url = "https://watch.plex.tv/libraries/m/movie/item/1"
+    details = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/libraries/m/movie/item/1 -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    watch = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=x&offset=15' -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    fake = FakeRunner(
+        {
+            PROBE: completed([], probe("123", STARTED)),
+            tuple(details): completed([]),
+            tuple(watch): completed([]),
+        }
     )
+
+    ADBLauncher(launcher_settings, fake).start(url, details_url)
+
+    assert fake.calls.count(details) == 1
+    assert fake.calls.index(details) < fake.calls.index(watch)
+    assert sleeps == [launcher_settings.route_settle_ms / 1000]
+
+
+def test_start_waits_for_silent_show_preview_grace_before_watch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = 0.0
+    sleeps: list[float] = []
+
+    def monotonic() -> float:
+        return now
+
+    def sleep(seconds: float) -> None:
+        nonlocal now
+        sleeps.append(seconds)
+        now += seconds
+
+    monkeypatch.setattr("jplex.adb_launcher.time.monotonic", monotonic)
+    monkeypatch.setattr("jplex.adb_launcher.time.sleep", sleep)
+    launcher_settings = settings(
+        route_settle_ms=0,
+        show_audio_preview_grace_ms=250,
+    )
+    url = "https://watch.plex.tv/watch/video?uri=x&offset=15"
+    details_url = "https://watch.plex.tv/libraries/m/show/item/10"
+    details = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d https://watch.plex.tv/libraries/m/show/item/10 -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    watch = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "am start -a android.intent.action.VIEW -d 'https://watch.plex.tv/watch/video?uri=x&offset=15' -n com.plexapp.android/tv.plex.app.MainActivity",
+    ]
+    back = [
+        "adb",
+        "-s",
+        "192.168.1.126:5555",
+        "shell",
+        "input",
+        "keyevent",
+        "KEYCODE_BACK",
+    ]
+    fake = FakeRunner(
+        {
+            PROBE: [
+                completed([], probe()),
+                completed([], probe()),
+                completed([], probe()),
+                completed([], probe()),
+                completed([], probe("123", STARTED)),
+            ],
+            tuple(details): completed([]),
+            tuple(watch): completed([]),
+        }
+    )
+
+    ADBLauncher(launcher_settings, fake).start(
+        url, details_url, release_details_preview=True
+    )
+
+    assert fake.calls.count(details) == 1
+    assert fake.calls.index(details) < fake.calls.index(watch)
+    assert back not in fake.calls
+    assert sum(sleeps) >= launcher_settings.show_audio_preview_grace_ms / 1000
 
 
 def test_prepare_clears_stale_player_screen_without_audio(
@@ -321,14 +442,7 @@ def test_prepare_clears_stale_player_screen_without_audio(
                 [],
                 "mCurrentFocus=Window{abc u0 com.plexapp.android/tv.plex.app.MainActivity}\n",
             ),
-            (
-                "adb",
-                "-s",
-                "192.168.1.126:5555",
-                "shell",
-                "pidof",
-                "com.plexapp.android",
-            ): completed([], ""),
+            PROBE: completed([], probe()),
             tuple(home): completed([]),
         }
     )
